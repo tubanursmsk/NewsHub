@@ -1,0 +1,50 @@
+<div class="row justify-content-center">
+    <div class="col-md-9"> <h1 class="mb-4 visually-hidden">Anasayfa</h1>
+
+        <% if (posts.length > 0) { %>
+            <% posts.forEach(post => { %>
+                
+                <div class="card mb-4 shadow-sm overflow-hidden" style="max-width: 740px; margin-left: auto; margin-right: auto;"> <div class="row g-0">
+                        <div class="col-md-4">
+                            <%# Eğer post.imageUrl varsa onu kullan, yoksa varsayılan bir resim göster %>
+                            <% const imageSource = post.imageUrl ? '/uploads/' + post.imageUrl : 'https://via.placeholder.com/300x200?text=NewsHub'; %>
+                            <a href="/posts/<%= post._id %>"> 
+                                <img src="<%= imageSource %>" 
+                                     class="img-fluid rounded-start w-100 h-100 object-fit-cover" <%# Resmi kaplayacak şekilde ayarladım %>
+                                     alt="<%= post.title %>" 
+                                     style="min-height: 180px;"> <%# Minimum yükseklik verdim %>
+                            </a>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body d-flex flex-column h-100"> <%# İçeriği dikeyde yaymak için flex ekledim %>
+                                <h5 class="card-title post-title mb-1">
+                                    <a href="/posts/<%= post._id %>"><%= post.title %></a>
+                                </h5>
+                                <p class="card-text mb-2">
+                                    <small class="text-body-secondary">
+                                        <%= post.author ? post.author.name : 'Bilinmeyen Yazar' %> - 
+                                        <%= new Date(post.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' }) %>
+                                    </small>
+                                </p>
+                                <p class="card-text text-secondary">
+                                    <% const snippet = post.content.length > 100 ? post.content.replace(/<[^>]*>/g, '').substring(0, 100) + '...' : post.content.replace(/<[^>]*>/g, ''); %>
+                                    <%= snippet %> <%# HTML taglerini temizleyip gösteriyoruz %>
+                                </p>
+                                <p class="card-text mt-auto"> <%# mt-auto ile en alta itildi %>
+                                    <a href="/posts/<%= post._id %>" class="text-primary fw-semibold">Devamını Oku →</a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <% }) %>
+        <% } else { %>
+            <div class="text-center p-5 border rounded bg-light">
+                <p class="lead">Henüz hiç yazı yayınlanmamış.</p>
+                <% if (user && user.id) { %>
+                    <a href="/posts/new" class="btn btn-primary mt-3">İlk Yazıyı Sen Ekle</a>
+                <% } %>
+            </div>
+        <% } %>
+    </div>
+</div>

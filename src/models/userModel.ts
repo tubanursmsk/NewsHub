@@ -9,9 +9,9 @@ export enum UserRole {
 export interface IUser extends Document {
     name: string;
     email: string;
-    password: string;
+    password: string; // Bu alanı hash'lenmiş parolayı saklayacak şekilde kullanacağız
     role: UserRole; // 'role' alanı eklendi
-    date?: Date;
+    createdAt?: Date; // Alan adını 'createdAt' olarak değiştirmek daha standart
 }
 
 const UserSchema: Schema<IUser> = new Schema({
@@ -23,9 +23,9 @@ const UserSchema: Schema<IUser> = new Schema({
         enum: Object.values(UserRole), // Sadece 'Admin' veya 'User' olabilir
         default: UserRole.USER // Varsayılan rol 'User' olarak ayarlandı
     },
-    date: {
+    createdAt: { // Alan adı 'createdAt' ve varsayılan değer 'Date.now' olarak güncellendi
         type: Date,
-        default: Date.now
+        default: Date.now // MongoDB'nin kendi zaman damgasını kullanmak daha iyi
     }
 });
 

@@ -1,17 +1,15 @@
-import express from 'express';
+import express, { Request, Response, NextFunction } from 'express'; // Request, Response, NextFunction import edildi
 import session from 'express-session';
 import path from 'path';
-import bodyParser from 'body-parser';
 import { connectDB } from './utils/db';
-import { IUser, UserRole } from './models/userModel'; // UserRole'ü import et
-// import { globalFilter } from './utils/globalFilter' // Şimdilik devre dışı bırakalım
+import { UserRole } from './models/userModel';
 import dotenv from 'dotenv';
-//import authWebRoutes from './routes/web/authRoutes';
-// import dashboardRoutes from './routes/web/dashboardRoutes'; // Gelecek adımlar için
-//import postWebRoutes from './routes/web/postRoutes'; 
-import ejsLayouts from 'express-ejs-layouts'; 
+import ejsLayouts from 'express-ejs-layouts';
 
-
+// --- Rota Dosyalarını Import Et ---
+import authRoutes from './routes/web/authRoutes';
+ import postRoutes from './routes/web/postRoutes'; // Henüz oluşturulmadıysa yorumda kalsın
+// import adminRoutes from './routes/web/adminRoutes';
 
 // .env Config
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -19,60 +17,85 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Session'ı daha iyi type-safe yapmak için düzenleme
+// Session Tipi Tanımı
 declare module 'express-session' {
     interface SessionData {
-        userId: string;
-        userRole: UserRole;
+        userId?: string;
+        userRole?: UserRole;
     }
 }
 
-
+// Session Middleware
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'gizli_bir_anahtar', // .env'den okumak en iyisi
+    secret: process.env.SESSION_SECRET || 'varsayilan_cok_gizli_anahtar',
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
-        secure: process.env.NODE_ENV === 'production' // Sadece HTTPS'te cookie gönder
+        secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
+        maxAge: 1000 * 60 * 60 * 24 // 1 gün
     }
 }));
 
-// Bu middleware, session'daki kullanıcı bilgilerini
-// tüm EJS şablonlarında 'user' adıyla erişilebilir hale getirir.
-app.use((req, res, next) => {
-    // Kullanıcı giriş yapmışsa, bilgilerini 'locals'a ata
+// Global Kullanıcı Bilgisi Middleware'i
+app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.session.userId && req.session.userRole) {
         res.locals.user = {
             id: req.session.userId,
             role: req.session.userRole
         };
     } else {
-        // Kullanıcı giriş yapmamışsa, 'user' değişkenini null yap
-        // Bu, EJS tarafında 'if (user)' kontrolünün hatasız çalışmasını sağlar.
-        res.locals.user = null; 
+        res.locals.user = null;
     }
     next();
 });
 
-// DB Config
+// Veritabanı Bağlantısı
 connectDB();
 
-// EJS Configuration
-app.set("views", path.join(__dirname, "views"));
-app.set("view engine", "ejs");
+// EJS Ayarları
 app.use(ejsLayouts);
+app.set('layout', './layouts/main'); // Ana layout dosyanızın adı (views klasörü içinde)
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
 
-
-// body-parser Config
-app.use(express.urlencoded({ extended: true })); // body-parser artık express içinde
+// Body Parser Middleware
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// --- Rotaları Kullanma ---
+// --- Rota Kullanımı ---
+app.use('/', authRoutes);
+app.use('/', postRoutes); 
+// app.use('/admin', adminRoutes);
+
+
+// Statik Dosyalar (Public klasörünü dışarıya açar)
+app.use(express.static(path.join(__dirname, '../public'))); // ../ ile kök dizine çıkıp public'i bul
+
+// ======== HATA YÖNETİMİ GÜNCELLENDİ ========
+
+// 404 Hata Yönetimi (Diğer rotalardan sonra gelmeli)
+app.use((req: Request, res: Response, next: NextFunction) => {
+    res.status(404).render('error', { // Tek 'error.ejs' dosyasını kullan
+        statusCode: 404,
+        message: "Aradığınız sayfa bulunamadı.",
+        layout: false // 'error.ejs' kendi HTML yapısını içerecek
+    });
+});
+
+// Genel Hata Yönetimi (En sonda olmalı)
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+    console.error(err.stack); // Geliştirme sırasında hatayı konsolda görmek önemlidir
+    res.status(500).render('error', { // Tek 'error.ejs' dosyasını kullan
+        statusCode: 500,
+        // Production ortamında kullanıcıya detaylı hata mesajı göstermemek daha güvenlidir.
+        message: process.env.NODE_ENV === 'production' ? "Sunucuda beklenmedik bir hata oluştu." : err.message,
+        layout: false // 'error.ejs' kendi HTML yapısını içerecek
+    });
+});
 
 
 
-// Global Hata Yöneticisi (sonraki adımlarda eklenecek)
-// app.use(globalFilter)
 
 app.listen(PORT, () => {
     console.log(`Sunucu çalışıyor: http://localhost:${PORT}`);

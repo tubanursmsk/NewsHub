@@ -1,0 +1,55 @@
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h1 class="mb-4">Yeni Yazı Oluştur</h1>
+        <a href="/dashboard">Dashboard'a Dön</a>
+        <hr>
+
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger" role="alert">
+                <%= error %>
+            </div>
+        <% } %>
+        
+        <form action="/posts" method="POST" enctype="multipart/form-data">
+            
+            <div class="mb-3">
+                <label for="title" class="form-label">Başlık:</label>
+                <input type="text" 
+                       class="form-control" 
+                       id="title" 
+                       name="title" 
+                       required>
+            </div>
+
+            <div class="mb-3">
+                <label for="postImage" class="form-label">Yazı Görseli (Opsiyonel):</label>
+                <input class="form-control" 
+                       type="file" 
+                       id="postImage" 
+                       name="postImage" 
+                       accept="image/png, image/jpeg, image/jpg, image/gif, image/webp"> 
+            </div>
+
+            <div class="mb-3">
+                <label for="category" class="form-label">Kategori:</label>
+                <select class="form-select" id="category" name="category" required>
+                    <option selected disabled value="">Kategori Seçiniz...</option>
+                    <% categories.forEach(cat => { %>
+                        <option value="<%= cat %>"><%= cat %></option>
+                    <% }) %>
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label for="content" class="form-label">İçerik:</label>
+                <textarea class="form-control" 
+                          id="content" 
+                          name="content" 
+                          rows="10" 
+                          required></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Yayınla</button>
+        </form>
+    </div>
+</div>
