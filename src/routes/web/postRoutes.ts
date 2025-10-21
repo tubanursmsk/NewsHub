@@ -1,23 +1,94 @@
 import { Router } from 'express';
-import { isAuthenticated } from '../../middlewares/authMiddleware'; 
-import { showHomePage, showNewPostForm, handleCreatePost } from '../../controllers/web/postController'; 
+import { isAuthenticated, isAuthor, canDeleteComment } from '../../middlewares/authMiddleware';
+// Gerekli controller fonksiyonları
+import {
+    showHomePage,
+    showNewPostForm,
+    handleCreatePost,
+    showDashboard,
+    showPostDetail, 
+    showEditPostForm, 
+    handleUpdatePost, 
+    handleDeletePost,  
+} from '../../controllers/web/postController';
+import { handleCreateComment, handleDeleteComment} from '../../controllers/web/commentController';
+
+// Dosya yükleme middleware'ini import et
 import upload from '../../utils/fileUpload';
 
 const router = Router();
 
-// ANASAYFA ROTASI (Herkese açık)
+// ======================================
+// HERKESE AÇIK ROTALAR
+// ======================================
+
+// ANASAYFA ROTASI
 router.get('/', showHomePage);
 
-// --- GİRİŞ GEREKTİREN POST ROTALARI ---
 
-// Yeni post oluşturma formunu GÖSTERMEK için GET isteği
-// Bu rota isAuthenticated ile korunmalı
+// ======================================
+// GİRİŞ YAPMIŞ KULLANICI ROTALARI
+// ======================================
+
+// DASHBOARD (KULLANICI PANELİ) ROTASI
+// Sadece giriş yapmış kullanıcılar erişebilir
+router.get('/dashboard', isAuthenticated, showDashboard);
+
+// YENİ YAZI OLUŞTURMA FORMU (GÖSTERME)
+// Sadece giriş yapmış kullanıcılar erişebilir
 router.get('/posts/new', isAuthenticated, showNewPostForm);
 
-// Yeni post oluşturma formunu İŞLEMEK için POST isteği
-// Bu rota da isAuthenticated ile korunmalı
-router.post('/posts', isAuthenticated, upload.single('postImage'), handleCreatePost);
+// YENİ YAZI OLUŞTURMA (İŞLEME)
+// Sadece giriş yapmış kullanıcılar erişebilir
+router.post(
+    '/posts',
+    isAuthenticated,
+    upload.single('postImage'), // Önce resmi yükle (varsa)
+    handleCreatePost            // Sonra veriyi işle
+);
 
-// Diğer post rotaları (detay, dashboard vb.) daha sonra buraya eklenecek
+// YAZI DETAY SAYFASI ROTASI
+// ':id' parametresi, URL'deki post ID'sini yakalar (req.params.id)
+router.get('/posts/:id', showPostDetail);
+
+// Yazı Düzenleme Formunu GÖSTERME
+// Sadece giriş yapmış ve yazının sahibi olan kullanıcı erişebilir
+router.get('/posts/:id/edit', isAuthenticated, isAuthor, showEditPostForm);
+
+// Yazı Düzenleme Formunu İŞLEME
+// Sadece giriş yapmış ve yazının sahibi olan kullanıcı erişebilir
+// Resim yükleme olabileceği için multer middleware'ini de ekliyoruz
+router.post(
+    '/posts/:id/update', 
+    isAuthenticated, 
+    isAuthor, 
+    upload.single('postImage'), // Önce resim (varsa) yüklenir
+    handleUpdatePost            // Sonra güncelleme işlenir
+);
+
+// Yazı SİLME İşlemi
+// Sadece giriş yapmış ve yazının sahibi olan kullanıcı erişebilir
+router.post('/posts/:id/delete', isAuthenticated, isAuthor, handleDeletePost);
+
+
+// ======================================
+// YORUM İŞLEMLERİ
+// ======================================
+
+// YENİ YORUM EKLEME (İŞLEME)
+// Sadece giriş yapmış kullanıcılar yorum yapabilir
+// Rota: /posts/POST_ID/comment şeklinde olacak
+router.post('/posts/:id/comment', isAuthenticated, handleCreateComment);
+
+// YORUM SİLME (İŞLEME)
+// Sadece admin veya post sahibi erişebilir
+// URL'in hem post hem de comment ID'sini içermesi önemli
+router.post(
+    '/posts/:postId/comment/:commentId/delete', 
+    isAuthenticated,       // 1. Giriş yapmış mı?
+    canDeleteComment,      // 2. Yorumu silebilir mi (Admin veya Post Sahibi)?
+    handleDeleteComment    // 3. Silme işlemini yap
+);
+
 
 export default router;

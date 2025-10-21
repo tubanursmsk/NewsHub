@@ -55,5 +55,96 @@ export const getAllPosts = async (): Promise<IPost[]> => {
     }
 };
 
-// Diğer post servis fonksiyonları (getPostById, updatePost, deletePost vb.)
-// daha sonra buraya eklenecek.
+/**
+ * Belirli bir kullanıcı ID'sine ait tüm postları getirir.
+ * En yeniden en eskiye doğru sıralar.
+ * @param authorId Kullanıcı ID'si (session'dan alınacak)
+ * @returns Kullanıcıya ait postların dizisi
+ */
+export const getPostsByAuthor = async (authorId: string): Promise<IPost[]> => {
+    try {
+        // 'author' alanı verilen authorId ile eşleşen postları bul ve sırala
+        const posts = await PostDB.find({ author: authorId })
+            .sort({ createdAt: -1 }); // Populate'a burada gerek yok, zaten kendi yazıları
+        return posts;
+    } catch (error) {
+        console.error("Yazara ait postlar getirilirken hata:", error);
+        throw new Error("Yazılarınız yüklenirken bir sorun oluştu.");
+    }
+};
+
+
+/**
+ * ID'ye göre tek bir postu getirir. Yazar bilgilerini de populate eder.
+ * @param postId Getirilecek post'un ID'si
+ * @returns Post nesnesi veya bulunamazsa null
+ * @throws Hata: Veritabanı hatası varsa
+ */
+export const getPostById = async (postId: string): Promise<IPost | null> => {
+    try {
+        // ID'nin geçerli bir ObjectId formatında olup olmadığını kontrol etmek iyi bir pratiktir
+        if (!mongoose.Types.ObjectId.isValid(postId)) {
+            return null; // Geçersiz ID ise null döndür
+        }
+        
+        // Post'u ID'ye göre bul ve 'author' alanını User modelinden 'name' ile doldur
+        const post = await PostDB.findById(postId).populate('author', 'name');
+        return post;
+    } catch (error) {
+        console.error("ID'ye göre post getirilirken hata:", error);
+        throw new Error("Yazı yüklenirken bir sorun oluştu.");
+    }
+};
+
+
+/**
+ * YENİ FONKSİYON
+ * Veritabanındaki bir post'u günceller.
+ * @param postId Güncellenecek post'un ID'si
+ * @param data Yeni başlık, içerik, kategori ve resim yolu bilgisi
+ * @returns Güncellenmiş post nesnesi veya bulunamazsa null
+ */
+export const updatePost = async (
+    postId: string,
+    data: { title: string; content: string; category: PostCategory; imageUrl?: string }
+): Promise<IPost | null> => {
+    try {
+        // Opsiyonel: Güncellemeden önce ID'nin geçerliliğini kontrol et
+        if (!mongoose.Types.ObjectId.isValid(postId)) {
+            return null;
+        }
+        // findByIdAndUpdate: ID'ye göre bulur ve verilen data ile günceller.
+        // { new: true } seçeneği, güncellenmiş (yeni) dökümanı döndürmesini sağlar.
+        return await PostDB.findByIdAndUpdate(postId, data, { new: true, runValidators: true }); // runValidators: Modeldeki kuralları uygular
+    } catch (error) {
+        console.error("Post güncellenirken hata:", error);
+        if (error instanceof mongoose.Error.ValidationError) {
+             throw new Error("Lütfen tüm zorunlu alanları doğru şekilde doldurun.");
+        }
+        throw new Error("Yazı güncellenirken bir sorun oluştu.");
+    }
+};
+
+/**
+ * YENİ FONKSİYON
+ * Veritabanından bir post'u siler.
+ * TODO: İlişkili yorumları da silmek veya post silinemez kuralı eklemek düşünülebilir.
+ * @param postId Silinecek post'un ID'si
+ */
+export const deletePost = async (postId: string): Promise<void> => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(postId)) {
+            throw new Error("Geçersiz yazı ID'si.");
+        }
+        const result = await PostDB.findByIdAndDelete(postId);
+        if (!result) {
+            throw new Error("Silinecek yazı bulunamadı.");
+        }
+        // Başarılı silme sonrası ek işlem gerekirse burada yapılabilir (örn: ilişkili yorumları silme)
+    } catch (error) {
+        console.error("Post silinirken hata:", error);
+        throw new Error("Yazı silinirken bir sorun oluştu.");
+    }
+};
+// ... (diğer fonksiyonlar: updatePost, deletePost vb.) ...
+

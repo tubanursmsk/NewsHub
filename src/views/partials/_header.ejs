@@ -14,40 +14,37 @@
 
     <div class="collapse navbar-collapse" id="navbarMenu">
       
-      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item mx-3">
+      <ul class="navbar-nav ms-3 mb-2 mb-lg-0"> 
+        <li class="nav-item mx-2">
           <a class="nav-link fw-semibold" href="/category/technology">Teknoloji</a>
         </li>
-        <li class="nav-item mx-3">
+        <li class="nav-item mx-2">
           <a class="nav-link fw-semibold" href="/category/science">Bilim</a>
         </li>
-        <li class="nav-item mx-3">
-          <a class="nav-link fw-semibold" href="/category/ai">Yapay Zekâ</a>
+        <li class="nav-item mx-2">
+           <a class="nav-link fw-semibold" href="/category/literacy">Dijital Okuryazarlık</a>
         </li>
-        <li class="nav-item mx-3">
+        <li class="nav-item mx-2">
           <a class="nav-link fw-semibold" href="/category/culture">Kültür</a>
         </li>
-         <li class="nav-item mx-3">
+         <li class="nav-item mx-2">
           <a class="nav-link fw-semibold" href="/category/gundem">Gündem</a>
         </li>
       </ul>
 
-      <div class="d-flex align-items-center">
+      <div class="d-flex align-items-center ms-auto">
 
-        <form class="d-flex me-4" action="/search" method="GET">
-          <input class="form-control rounded-pill me-2" type="search" name="q" placeholder="Ara..." aria-label="Search">
+        <form class="d-flex me-3" action="/search" method="GET"> <input class="form-control rounded-pill me-2" type="search" name="q" placeholder="Ara..." aria-label="Search">
           <button class="btn btn-outline-primary rounded-pill" type="submit">Ara</button>
         </form>
 
         <% if (user && user.id) { %>
-          
-          <a href="/posts/new" class="btn btn-outline-dark me-3">Yazı ekle 👨🏻‍💻</a>
-          <div class="nav-item dropdown">
+          <a href="/posts/new" class="btn btn-outline-dark me-2">Yazı ekle 👨🏻‍💻</a> <div class="nav-item dropdown">
             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               <i class="bi bi-person-circle fs-4" style="color: #6c757d;"></i>
             </a>
             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-              <li><a class="dropdown-item" href="/dashboard">Admin Panel</a></li>
+              <li><a class="dropdown-item" href="/dashboard">Panelim</a></li> 
               <% if (user.role === 'Admin') { %>
                 <li><a class="dropdown-item" href="/admin/dashboard">Admin Paneli</a></li>
               <% } %>
@@ -55,12 +52,9 @@
               <li><a class="dropdown-item" href="/logout">Çıkış Yap</a></li>
             </ul>
           </div>
-          
         <% } else { %>
-          
           <a href="/login" class="btn btn-outline-secondary me-2">Giriş Yap</a>
           <a href="/register" class="btn btn-primary">Kayıt Ol</a>
-          
         <% } %>
         
       </div> </div> </div> </nav>

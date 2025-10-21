@@ -1,5 +1,6 @@
-import UserDB, { IUser, UserRole } from '../../models/userModel'; 
+import UserDB, { IUser, UserRole } from '../../models/userModel';
 import bcrypt from 'bcrypt';
+import mongoose from 'mongoose';
 
 /**
  * Yeni bir kullanıcı kaydeder. Parolayı hash'ler.
@@ -50,5 +51,68 @@ export const loginUser = async (email: string, password: string): Promise<IUser>
     }
 
     // Kullanıcı bulundu ve parola doğru
+
     return user;
 };
+
+/**
+ * YENİ FONKSİYON
+ * ID'ye göre tek bir kullanıcıyı getirir. Güvenlik için parola alanını dışarıda bırakır.
+ * @param userId Getirilecek kullanıcının ID'si
+ * @returns Kullanıcı nesnesi (parola hariç) veya bulunamazsa null
+ */
+export const getUserById = async (userId: string): Promise<Omit<IUser, 'password'> | null> => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return null;
+        }
+        // findById ile kullanıcıyı bul ve select('-password') ile parola alanını hariç tut
+        const user = await UserDB.findById(userId).select('-password');
+        return user;
+    } catch (error) {
+        console.error("ID'ye göre kullanıcı getirilirken hata:", error);
+        throw new Error("Kullanıcı bilgileri yüklenirken bir sorun oluştu.");
+    }
+};
+
+/**
+ * YENİ FONKSİYON
+ * Kullanıcı bilgilerini (isim ve email) günceller.
+ * @param userId Güncellenecek kullanıcının ID'si
+ * @param data Yeni isim ve email bilgisi
+ * @returns Güncellenmiş kullanıcı nesnesi (parola hariç)
+ * @throws Hata: Email zaten kullanılıyorsa veya veritabanı hatası varsa
+ */
+export const updateUserProfile = async (
+    userId: string,
+    data: { name: string; email: string }
+): Promise<Omit<IUser, 'password'> | null> => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return null;
+        }
+
+        // Opsiyonel: Eğer email değiştiriliyorsa, yeni email'in başka bir kullanıcı tarafından
+        // kullanılıp kullanılmadığını kontrol etmemiz gerekir.
+        const existingUserWithEmail = await UserDB.findOne({ email: data.email, _id: { $ne: userId } });
+        if (existingUserWithEmail) {
+            throw new Error('Bu email adresi başka bir kullanıcı tarafından kullanılıyor.');
+        }
+
+        // Kullanıcıyı bul ve güncelle, güncellenmiş halini döndür (parola hariç)
+        const updatedUser = await UserDB.findByIdAndUpdate(
+            userId,
+            { name: data.name, email: data.email },
+            { new: true, runValidators: true } // runValidators: Modeldeki email formatı gibi kuralları uygular
+        ).select('-password');
+
+        return updatedUser;
+    } catch (error: any) {
+        console.error("Profil güncellenirken hata:", error);
+        // Hata mesajını doğrudan fırlat ki controller yakalasın
+        throw new Error(error.message || "Profil güncellenirken bir sorun oluştu.");
+    }
+};
+
+//Opsiyonel: Parola güncelleme için ayrı bir fonksiyon yazmak daha güvenlidir.
+//export const updateUserPassword = async (userId: string, oldPass: string, newPass: string): Promise<void> => { ... }

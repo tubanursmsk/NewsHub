@@ -1,12 +1,7 @@
 import { Router } from 'express';
-// Controller fonksiyonlarını import et
-import { 
-    showLoginPage, 
-    handleLogin, 
-    showRegisterPage, 
-    handleRegister, 
-    handleLogout 
-} from '../../controllers/web/authController';
+import { showLoginPage, handleLogin, showRegisterPage, handleRegister, handleLogout, showProfilePage, showEditProfileForm, handleUpdateProfile } from '../../controllers/web/authController';
+import { registerValidationRules, loginValidationRules } from '../../validations/auth.validator';
+import { isAuthenticated } from '../../middlewares/authMiddleware'; 
 
 const router = Router();
 
@@ -15,10 +10,21 @@ const router = Router();
 router.get('/login', showLoginPage);
 router.get('/register', showRegisterPage);
 
-// --- POST Rotaları (Formları İşlemek İçin) ---
-// Ziyaretçiler bu işlemleri yapabilir, isAuthenticated middleware'i YOK
-router.post('/login', handleLogin);
-router.post('/register', handleRegister);
+// --- POST Rotaları ---
+
+// Kayıt İşlemi (Validasyon eklendi)
+router.post(
+    '/register',
+    registerValidationRules(), // <-- Validasyon middleware'i buraya eklendi
+    handleRegister
+);
+
+// Giriş İşlemi (Validasyon eklendi - sonraki adımda kullanılacak)
+router.post(
+    '/login',
+    loginValidationRules(), // <-- Login kurallarını da ekleyelim
+    handleLogin
+);
 
 // --- Çıkış İşlemi (Giriş Yapmış Olmayı Gerektirir) ---
 // Çıkış yapabilmek için önce giriş yapmış olmak mantıklı,
@@ -26,5 +32,19 @@ router.post('/register', handleRegister);
 // import { isAuthenticated } from '../../middlewares/authMiddleware'; // Eğer middleware varsa
 // router.get('/logout', isAuthenticated, handleLogout); 
 router.get('/logout', handleLogout); // Şimdilik korumasız bırakalım
+
+
+// ======================================
+// PROFİL SAYFALARI (GİRİŞ GEREKLİ)
+// ======================================
+
+// Profil Görüntüleme Sayfası
+router.get('/profile', isAuthenticated, showProfilePage);
+
+// Profil Düzenleme Formu Gösterme
+router.get('/profile/edit', isAuthenticated, showEditProfileForm);
+
+// Profil Düzenleme Formu İşleme
+router.post('/profile/edit', isAuthenticated, handleUpdateProfile);
 
 export default router;

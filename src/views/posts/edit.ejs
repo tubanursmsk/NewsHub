@@ -1,0 +1,66 @@
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h1 class="mb-4">Yazıyı Düzenle</h1>
+        <%# Detay sayfasına veya dashboard'a geri dön linki %>
+        <a href="/posts/<%= post._id %>">Yazıya Geri Dön</a> | 
+        <a href="/dashboard">Panelime Dön</a>
+        <hr>
+
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="alert alert-danger" role="alert">
+                <%= error %>
+            </div>
+        <% } %>
+        
+        <form action="/posts/<%= post._id %>/update" method="POST" enctype="multipart/form-data">
+            
+            <div class="mb-3">
+                <label for="title" class="form-label">Başlık:</label>
+                <input type="text" 
+                       class="form-control" 
+                       id="title" 
+                       name="title" 
+                       value="<%= post.title %>" <%# Mevcut başlık %>
+                       required>
+            </div>
+
+            <div class="mb-3">
+                <label for="postImage" class="form-label">Yazı Görseli (Değiştirmek için yenisini seçin):</label>
+                <% if (post.imageUrl) { %>
+                    <div class="mb-2">
+                        <img src="/uploads/<%= post.imageUrl %>" alt="Mevcut Resim" style="max-height: 150px;" class="img-thumbnail">
+                        <small class="d-block text-muted">Mevcut Resim</small>
+                    </div>
+                <% } %>
+                <input class="form-control" 
+                       type="file" 
+                       id="postImage" 
+                       name="postImage" 
+                       accept="image/png, image/jpeg, image/jpg, image/gif, image/webp"> 
+            </div>
+
+            <div class="mb-3">
+                <label for="category" class="form-label">Kategori:</label>
+                <select class="form-select" id="category" name="category" required>
+                    <option disabled value="">Kategori Seçiniz...</option>
+                    <% categories.forEach(cat => { %>
+                        <%# Mevcut kategori seçili gelsin %>
+                        <option value="<%= cat %>" <%= post.category === cat ? 'selected' : '' %>><%= cat %></option> 
+                    <% }) %>
+                </select>
+            </div>
+            
+            <div class="mb-3">
+                <label for="content" class="form-label">İçerik:</label>
+                <textarea class="form-control" 
+                          id="content" 
+                          name="content" 
+                          rows="15" 
+                          required><%= post.content %></textarea> <%# Mevcut içerik %>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Güncelle</button>
+            <a href="/posts/<%= post._id %>" class="btn btn-secondary ms-2">İptal</a>
+        </form>
+    </div>
+</div>

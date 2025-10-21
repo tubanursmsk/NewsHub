@@ -1,0 +1,46 @@
+import { body } from 'express-validator';
+import UserDB from '../models/userModel'; // Email'in zaten var olup olmadığını kontrol etmek için
+
+export const registerValidationRules = () => {
+  return [
+    // 1. 'name' alanı için kurallar
+    body('name')
+      .trim() // Başındaki/sonundaki boşlukları sil
+      .notEmpty().withMessage('Ad Soyad alanı boş bırakılamaz.')
+      .isLength({ min: 3 }).withMessage('Ad Soyad en az 3 karakter olmalıdır.'),
+
+    // 2. 'email' alanı için kurallar
+    body('email')
+      .trim()
+      .notEmpty().withMessage('Email alanı boş bırakılamaz.')
+      .isEmail().withMessage('Lütfen geçerli bir email adresi girin.')
+      // Özel kontrol: Bu email veritabanında zaten var mı?
+      .custom(async (value) => {
+        const user = await UserDB.findOne({ email: value });
+        if (user) {
+          // Eğer kullanıcı bulunduysa, bu email zaten kullanılıyor demektir.
+          return Promise.reject('Bu email adresi zaten kullanılıyor.');
+        }
+      }),
+
+    // 3. 'password' alanı için kurallar
+    body('password')
+      .notEmpty().withMessage('Parola alanı boş bırakılamaz.')
+      .isLength({ min: 6 }).withMessage('Parola en az 6 karakter uzunluğunda olmalıdır.')
+      // İsteğe bağlı: Daha karmaşık parola kuralları eklenebilir
+      // .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/)
+      // .withMessage('Parola en az bir büyük harf, bir küçük harf ve bir rakam içermelidir.')
+  ];
+};
+
+// Login için validasyon kurallarını da buraya ekleyebiliriz (sonraki adımda)
+export const loginValidationRules = () => {
+    return [
+        body('email')
+            .trim()
+            .notEmpty().withMessage('Email alanı boş bırakılamaz.')
+            .isEmail().withMessage('Lütfen geçerli bir email adresi girin.'),
+        body('password')
+            .notEmpty().withMessage('Parola alanı boş bırakılamaz.')
+    ];
+};
