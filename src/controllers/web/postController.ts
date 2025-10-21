@@ -19,6 +19,7 @@ export const showHomePage = async (req: Request, res: Response, next: NextFuncti
     }
 };
 
+
 /**
  * Yeni post oluşturma formunu gösterir.
  * Kategorileri ve boş varsayılanları view'a gönderir.

@@ -44,3 +44,34 @@ export const loginValidationRules = () => {
             .notEmpty().withMessage('Parola alanı boş bırakılamaz.')
     ];
 };
+
+export const updateProfileValidationRules = () => {
+  return [
+    // 1. 'name' alanı için kurallar
+    body('name')
+      .trim()
+      .notEmpty().withMessage('Ad Soyad alanı boş bırakılamaz.')
+      .isLength({ min: 3 }).withMessage('Ad Soyad en az 3 karakter olmalıdır.'),
+
+    // 2. 'email' alanı için kurallar
+    body('email')
+      .trim()
+      .notEmpty().withMessage('Email alanı boş bırakılamaz.')
+      .isEmail().withMessage('Lütfen geçerli bir email adresi girin.')
+      // Özel kontrol: Girilen email BAŞKA BİR kullanıcı tarafından kullanılıyor mu?
+      .custom(async (value, { req }) => {
+        // Mevcut kullanıcının ID'sini request'ten al (session'dan)
+        const userId = req.session.userId; 
+        if (!userId) { 
+            // Bu normalde isAuthenticated middleware'i tarafından engellenir
+            throw new Error('Kimlik doğrulama hatası.'); 
+        }
+        // Email'i ve farklı bir ID'si olan kullanıcıyı ara
+        const user = await UserDB.findOne({ email: value, _id: { $ne: userId } });
+        if (user) {
+          // Eğer başka bir kullanıcı bu email'i kullanıyorsa reddet
+          return Promise.reject('Bu email adresi başka bir kullanıcı tarafından kullanılıyor.');
+        }
+      }),
+  ];
+};

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { showLoginPage, handleLogin, showRegisterPage, handleRegister, handleLogout, showProfilePage, showEditProfileForm, handleUpdateProfile } from '../../controllers/web/authController';
-import { registerValidationRules, loginValidationRules } from '../../validations/auth.validator';
+import { registerValidationRules, loginValidationRules, updateProfileValidationRules } from '../../validations/auth.validator';
 import { isAuthenticated } from '../../middlewares/authMiddleware'; 
 
 const router = Router();
@@ -42,9 +42,7 @@ router.get('/logout', handleLogout); // Şimdilik korumasız bırakalım
 router.get('/profile', isAuthenticated, showProfilePage);
 
 // Profil Düzenleme Formu Gösterme
-router.get('/profile/edit', isAuthenticated, showEditProfileForm);
+router.get('/profile/edit', isAuthenticated, showEditProfileForm, updateProfileValidationRules(),);
 
-// Profil Düzenleme Formu İşleme
-router.post('/profile/edit', isAuthenticated, handleUpdateProfile);
 
 export default router;

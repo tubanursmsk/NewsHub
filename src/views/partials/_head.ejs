@@ -8,45 +8,165 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
 
-
 <style>
-    /* 1. Varsayılan UI Fontu (Inter, sans-serif) */
-    body, button, input, .navbar, .list-group-item, .dropdown-menu, .btn {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        background-color: #FAFAFA; /* Açık gri arka plan */
-        color: #333333; /* Koyu gri metin rengi */
-    }
-    
-    /* 2. Yazı Başlıkları ve İçerik Fontu (Source Serif 4, serif) */
-    h1, h2, h3, h4, h5, h6, .post-title, .post-content {
-        font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  /* === GENEL === */
+  body {
+    font-family: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    background-color: #ffffff;
+    color: #242424;
+  }
+
+  /* Modern yazı görünümü */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Source Serif 4', serif;
+    font-weight: 700;
+  }
+
+  .navbar {
+    background-color: #fff;
+    border-bottom: 1px solid #e6e6e6;
+    height: 68px;
+    z-index: 1000;
+  }
+
+  .navbar-brand {
+    font-weight: 700;
+    letter-spacing: -0.3px;
+  }
+
+  .nav-link {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    color: #4b5563 !important;
+    transition: color 0.2s ease;
+  }
+  .nav-link:hover {
+    color: #111827 !important;
+  }
+
+  /* === SIDEBAR === */
+  .list-group {
+    border: none;
+  }
+  .list-group-item {
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: #374151;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .list-group-item.active,
+  .list-group-item:hover {
+    background-color: #f3f4f6;
+    color: #000;
+  }
+
+  /* Sidebar'ı Medium tarzı sola sabitle */
+  .sidebar-fixed {
+    position: fixed;
+    top: 80px; /* navbar altına */
+    left: 40px;
+    width: 230px;
+    height: calc(100vh - 100px);
+  }
+
+  /* === ANA İÇERİK === */
+  .content-area {
+    margin-left: 300px; /* sidebar genişliği kadar boşluk bırak */
+    padding-right: 2rem;
+  }
+
+.post-title a {
+  color: #111;
+  font-weight: 600;
+  font-family: 'Source Serif 4', serif;
+  letter-spacing: -0.2px;
+}
+
+  .post-title a {
+    color: #111827;
+  }
+
+  .post-title a:hover {
+    color: #2563eb;
+  }
+
+  .card {
+    border: none;
+    border-bottom: 1px solid #f0f0f0;
+    border-radius: 0;
+  }
+
+  .card:hover {
+    background-color: #fafafa;
+  }
+
+  /* === SEARCH === */
+  input[type="search"] {
+    border-radius: 25px;
+    border: 1px solid #d1d5db;
+    background-color: #f9fafb;
+    padding: 0.4rem 1rem;
+  }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 991px) {
+    .sidebar-fixed {
+      position: relative;
+      width: 100%;
+      height: auto;
+      top: 0;
+      left: 0;
+      margin-bottom: 1rem;
     }
 
-    .navbar {
-        border-bottom: 1px solid #f0f0f0;
+    .content-area {
+      margin-left: 0;
+      padding: 0 1rem;
     }
+  }
 
-    /* 3. Post Başlığına özel stil */
-    .post-title {
-        font-weight: 700; /* Kalın başlıklar */
-        font-size: 1.5rem;
-        color: #242424;
-        line-height: 1.2; /* Satır yüksekliği */
-    }
-    
-    /* 4. Post içeriği için (bir sonraki adımda kullanılacak) */
-    .post-content {
-        font-size: 1.1rem; /* Daha okunaklı, büyük font */
-        line-height: 1.7; /* Daha geniş satır aralığı */
-    }
+@media (max-width: 992px) {
+  .sidebar-fixed {
+    position: relative;
+    width: 100%;
+    height: auto;
+    border-right: none;
+    padding: 10px 20px;
+  }
+  .content-area {
+    margin-left: 0;
+    max-width: 100%;
+    padding: 10px 20px;
+  }
+}
 
-    a {
-        text-decoration: none;
-        color: inherit;
-    }
-    a:hover {
-        color: #000;
-    }
+  /* --- Sidebar --- */
+.sidebar-fixed {
+  position: fixed;
+  top: 80px;
+  left: 0;
+  width: 240px;
+  height: calc(100vh - 80px);
+  padding-left: 40px;
+  padding-top: 20px;
+  border-right: 1px solid #f3f4f6;
+  background-color: #fff;
+}
+
+/* --- İçerik Alanı (Yazılar) --- */
+.content-area {
+  max-width: 760px;           /* Yazıların genişliği Medium gibi */
+  margin-left: 280px;         /* Sidebar genişliği kadar boşluk bırak */
+  margin-right: auto;         /* Ortalansın */
+  padding: 20px 40px;
+}
+
+  
 </style>
+
 
 <title>NewsHub</title>

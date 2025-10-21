@@ -25,7 +25,6 @@ const router = Router();
 // ANASAYFA ROTASI
 router.get('/', showHomePage);
 
-
 // ======================================
 // GİRİŞ YAPMIŞ KULLANICI ROTALARI
 // ======================================

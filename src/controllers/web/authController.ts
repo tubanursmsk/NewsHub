@@ -189,45 +189,48 @@ export const showEditProfileForm = async (req: Request, res: Response, next: Nex
         next(error);
     }
 };
-
 /**
- * YENİ FONKSİYON
  * Profil düzenleme formundan gelen veriyi işler.
+ * Validasyon hatalarını kontrol eder.
  */
 export const handleUpdateProfile = async (req: Request, res: Response, next: NextFunction) => {
-    // TODO: Buraya da express-validator eklenmeli (isim ve email için)
     const userId = req.session.userId;
     const { name, email } = req.body;
 
     if (!userId) { return res.redirect('/login'); }
 
-    try {
-        // Basit validasyon
-        if (!name || !email || name.trim() === '' || email.trim() === '') {
-            const user = await authService.getUserById(userId); // Mevcut veriyi tekrar çek
-            return res.status(400).render('profile/edit', {
-                 error: "Ad Soyad ve Email alanları boş bırakılamaz.",
-                 userData: user, // userData'yı tekrar gönderiyoruz
-                 errors: [],
-                 oldInput: { name, email },
-                 activePage: 'profile'
-             });
-        }
+    // 1. Validasyon sonuçlarını kontrol et
+    const errors = validationResult(req);
 
+    // 2. Eğer validasyon hatası varsa...
+    if (!errors.isEmpty()) {
+        const user = await authService.getUserById(userId); // Mevcut veriyi tekrar çek
+        return res.status(400).render('profile/edit', {
+            errors: errors.array(), // Hataları gönder
+            userData: user, // userData'yı tekrar gönderiyoruz
+            error: null, // Genel hata yok
+            oldInput: { name, email }, // Hatalı girilen veriyi geri gönder
+            activePage: 'profile'
+        });
+    }
+
+    // 3. Validasyon hatası yoksa, güncellemeye çalış
+    try {
         await authService.updateUserProfile(userId, { name: name.trim(), email: email.trim() });
         
-        // Başarılı güncelleme sonrası profil sayfasına yönlendir (belki bir başarı mesajıyla)
+        // Başarılı güncelleme sonrası profil sayfasına yönlendir
         res.redirect('/profile?updated=true'); 
 
     } catch (error: any) {
         // Servisten gelen hataları (örn: email zaten kullanılıyor) yakala
         const user = await authService.getUserById(userId); // Mevcut veriyi tekrar çek
         res.status(400).render('profile/edit', {
-             error: error.message || "Profil güncellenirken bir hata oluştu.",
+             error: error.message || "Profil güncellenirken bir hata oluştu.", // Genel hatayı göster
              userData: user,
-             errors: [],
-             oldInput: { name, email }, // Hatalı girilen veriyi geri gönder
+             errors: [], // Validasyon hatası değil
+             oldInput: { name, email }, 
              activePage: 'profile'
         });
+        // Alternatif: next(error);
     }
 };
