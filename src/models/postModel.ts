@@ -14,7 +14,7 @@ export interface IPost extends Document {
     title: string;
     content: string;
     imageUrl?: string; 
-    category: PostCategory; // YENİ: Kategori alanı
+    category: Schema.Types.ObjectId; // YENİ: Kategori alanı
     author: mongoose.Types.ObjectId; 
     comments: mongoose.Types.ObjectId[]; 
     createdAt: Date;
@@ -25,7 +25,7 @@ const PostSchema: Schema<IPost> = new Schema({
     content: { type: String, required: true },
     imageUrl: { type: String, required: false }, 
     category: { // YENİ: Şemaya eklendi
-        type: String,
+        type: Schema.Types.ObjectId,
         enum: Object.values(PostCategory), // Sadece enum'daki değerler geçerli
         required: true, // Kategori seçimi zorunlu olsun
         default: PostCategory.DIGER // Varsayılan kategori

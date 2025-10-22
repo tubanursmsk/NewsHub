@@ -11,6 +11,7 @@ export interface IUser extends Document {
     email: string;
     password: string; // Bu alanı hash'lenmiş parolayı saklayacak şekilde kullanacağız
     role: UserRole; // 'role' alanı eklendi
+    jwt?: string,
     createdAt?: Date; // Alan adını 'createdAt' olarak değiştirmek daha standart
 }
 
@@ -23,12 +24,16 @@ const UserSchema: Schema<IUser> = new Schema({
         enum: Object.values(UserRole), // Sadece 'Admin' veya 'User' olabilir
         default: UserRole.USER // Varsayılan rol 'User' olarak ayarlandı
     },
+    jwt: {type: String},
     createdAt: { // Alan adı 'createdAt' ve varsayılan değer 'Date.now' olarak güncellendi
         type: Date,
-        default: Date.now // MongoDB'nin kendi zaman damgasını kullanmak daha iyi
+        default:  () => {
+            const now = new Date();
+            return now.setHours(now.getHours() + 3)
+        } // MongoDB'nin kendi zaman damgasını kullanmak daha iyi
     }
-});
+})
 
-const UserDB = mongoose.model<IUser>('User', UserSchema);
+const UserDB = mongoose.model<IUser>('User', UserSchema)
 
-export default UserDB;
+export default UserDB
