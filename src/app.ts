@@ -8,8 +8,8 @@ import ejsLayouts from 'express-ejs-layouts';
 
 // --- Rota Dosyalarını Import Et ---
 import authRoutes from './routes/web/authRoutes';
- import postRoutes from './routes/web/postRoutes'; // Henüz oluşturulmadıysa yorumda kalsın
-// import adminRoutes from './routes/web/adminRoutes';
+import postRoutes from './routes/web/postRoutes'; // Henüz oluşturulmadıysa yorumda kalsın
+import adminRoutes from './routes/web/adminRoutes';
 
 // .env Config
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -66,7 +66,7 @@ app.use(express.urlencoded({ extended: true }));
 // --- Rota Kullanımı ---
 app.use('/', authRoutes);
 app.use('/', postRoutes); 
-// app.use('/admin', adminRoutes);
+app.use('/admin', adminRoutes);
 
 
 // Statik Dosyalar (Public klasörünü dışarıya açar)
@@ -83,7 +83,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     });
 });
 
-// Genel Hata Yönetimi (En sonda olmalı)
+// Global error handler ile tüm hatalar tek noktadan yönetiliyor
 app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
     console.error(err.stack); // Geliştirme sırasında hatayı konsolda görmek önemlidir
     res.status(500).render('error', { // Tek 'error.ejs' dosyasını kullan

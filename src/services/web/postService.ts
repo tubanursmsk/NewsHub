@@ -1,6 +1,7 @@
 import PostDB, { IPost } from '../../models/postModel'; 
 import mongoose from 'mongoose';
 import { PostCategory } from '../../models/postModel';
+import CommentDB from '../../models/commentModel'; // YENİ: İlişkili yorumları silmek için gerekli
 /**
  * Veritabanına yeni bir post oluşturur.
  * @param title Post başlığı
@@ -132,15 +133,20 @@ export const updatePost = async (
  * @param postId Silinecek post'un ID'si
  */
 export const deletePost = async (postId: string): Promise<void> => {
-    try {
+  try {
         if (!mongoose.Types.ObjectId.isValid(postId)) {
             throw new Error("Geçersiz yazı ID'si.");
         }
+        // İlişkili yorumları da silmek için önce yorumları bul ve sil
+        await CommentDB.deleteMany({ post: postId }); // <-- YORUMLARI SİLME EKLENDİ
+
+        // Sonra postu sil
         const result = await PostDB.findByIdAndDelete(postId);
         if (!result) {
             throw new Error("Silinecek yazı bulunamadı.");
         }
-        // Başarılı silme sonrası ek işlem gerekirse burada yapılabilir (örn: ilişkili yorumları silme)
+        console.log(`Post (${postId}) ve ilişkili yorumlar silindi.`); // Loglama güncellendi
+
     } catch (error) {
         console.error("Post silinirken hata:", error);
         throw new Error("Yazı silinirken bir sorun oluştu.");

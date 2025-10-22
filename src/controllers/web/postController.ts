@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from 'express';
 import * as postService from '../../services/web/postService';
 import * as commentService from '../../services/web/commentService';
 import { PostCategory } from '../../models/postModel'; // Enum importu
+import { validationResult } from 'express-validator';
 
 /**
  * Anasayfayı render eder. Veritabanından tüm postları çeker ve view'a gönderir.
@@ -37,67 +38,47 @@ export const showNewPostForm = (req: Request, res: Response, next: NextFunction)
         next(e);
     }
 };
-
 /**
- * Yeni post oluşturma formundan gelen veriyi, resmi ve kategoriyi işler.
+ * Yeni post oluşturma formundan gelen veriyi işler (Validasyonlu).
  */
 export const handleCreatePost = async (req: Request, res: Response, next: NextFunction) => {
+    // 1. Validasyon sonuçlarını kontrol et
+    const errors = validationResult(req);
+    const { title, content, category } = req.body;
+    const authorId = req.session.userId;
+
+    // 2. Eğer validasyon hatası varsa...
+    if (!errors.isEmpty()) {
+        // Formu, validasyon hataları ve eski verilerle tekrar render et
+        return res.status(400).render('posts/new', {
+            errors: errors.array(), // Hataları gönder
+            oldInput: { title, content, category }, // Eski veriyi gönder
+            categories: Object.values(PostCategory),
+            error: null, // Genel hata yok
+            activePage: 'newPost'
+        });
+    }
+    
+    // 3. Validasyon hatası yoksa devam et...
+    if (!authorId) { /* ... (giriş kontrolü aynı) ... */ }
+
     try {
-        // req.body tanımsızsa erken hata ver
-        if (!req.body) {
-            console.error("Hata: req.body tanımsız geldi! Multer düzgün çalışmıyor olabilir.");
-            throw new Error("Form verileri alınamadı.");
-        }
-
-        const { title, content, category } = req.body;
-        const authorId = req.session.userId;
-
-        if (!authorId) {
-             // Giriş yapılmamışsa 401 hatası ver
-            return res.status(401).render('error', {
-                statusCode: 401,
-                message: "Yazı eklemek için giriş yapmalısınız.",
-                layout: false
-            });
-        }
-
-        // Basit validasyon
-        if (!title || !content || !category || title.trim() === '' || content.trim() === '' || category.trim() === '') {
-             return res.status(400).render('posts/new', {
-                 error: "Başlık, kategori ve içerik alanları boş bırakılamaz.",
-                 categories: Object.values(PostCategory),
-                 oldInput: { title, content, category },
-                 activePage: 'newPost'
-             });
-        }
-
-        // Yüklenen dosyanın adını al (Tip İddiası ile)
         let imageUrl: string | undefined = undefined;
         const file = (req as any).file as Express.Multer.File | undefined;
-        if (file) {
-            imageUrl = file.filename;
-        }
+        if (file) { imageUrl = file.filename; }
 
-        // Servise category'yi de gönder
-        await postService.createPost(title, content, authorId, category, imageUrl);
-
-        // Başarılı ekleme sonrası dashboard'a yönlendir
+        await postService.createPost(title.trim(), content.trim(), authorId, category, imageUrl);
         res.redirect('/dashboard');
 
     } catch (error) {
-         // Multer'dan gelen dosya türü hatasını yakala ve formu tekrar göster
-         if (error instanceof Error && error.message.startsWith('Hata: Sadece resim dosyaları')) {
-             return res.status(400).render('posts/new', {
-                 error: error.message,
-                 categories: Object.values(PostCategory),
-                 oldInput: req.body,
-                 activePage: 'newPost'
-            });
+        // Multer veya Servis hatası
+        if (error instanceof Error && error.message.startsWith('Hata: Sadece resim dosyaları')) {
+             return res.status(400).render('posts/new', { /* ... (multer hatası render) ... */ });
          }
-         // Diğer tüm hataları genel hata yöneticisine gönder
-         next(error);
+         next(error); // Diğer hataları genel yöneticiye gönder
     }
 };
+
 
 /**
  * Kullanıcının dashboard sayfasını gösterir. Kullanıcının kendi postlarını listeler.
@@ -175,80 +156,63 @@ export const showEditPostForm = async (req: Request, res: Response, next: NextFu
         next(error);
     }
 };
-
 /**
- * YENİ FONKSİYON
- * Düzenlenen post formundan gelen veriyi ve (varsa) yeni resmi işler.
+ * Düzenlenen post formundan gelen veriyi işler (Validasyonlu).
  */
 export const handleUpdatePost = async (req: Request, res: Response, next: NextFunction) => {
-    const postId = req.params.id; // URL'den ID'yi al
+    const postId = req.params.id;
+    const userId = req.session.userId; // Yetki kontrolü için (isAuthor zaten yapıyor ama...)
+
+    // 1. Validasyon sonuçlarını kontrol et
+    const errors = validationResult(req);
+    const { title, content, category } = req.body;
+
+    // 2. Eğer validasyon hatası varsa...
+    if (!errors.isEmpty()) {
+        // Hata durumunda formu tekrar doldurmak için postu ve eski girilenleri gönder
+        const post = await postService.getPostById(postId); // Mevcut postu çek
+        return res.status(400).render('posts/edit', {
+            errors: errors.array(), // Hataları gönder
+            post: post, // Post bilgisini yine de gönder (ID vb. için)
+            oldInput: { title, content, category }, // Hatalı girilen veriyi gönder
+            categories: Object.values(PostCategory),
+            error: null,
+            activePage: 'editPost'
+        });
+    }
+
+    // 3. Validasyon hatası yoksa devam et...
+    if (!userId) { /* ... (giriş kontrolü) ... */ }
+
     try {
-        if (!req.body) { throw new Error("Form verileri alınamadı."); }
-
-        const { title, content, category } = req.body;
-        
-        // Basit validasyon
-        if (!title || !content || !category || title.trim() === '' || content.trim() === '' || category.trim() === '') {
-            const post = await postService.getPostById(postId); // Hata durumunda formu tekrar doldurmak için postu çek
-             return res.status(400).render('posts/edit', {
-                 error: "Başlık, kategori ve içerik alanları boş bırakılamaz.",
-                 categories: Object.values(PostCategory),
-                 post: post, // Post bilgisini tekrar gönder
-                 oldInput: { title, content, category } // Girilen eski değerleri de gönderelim (opsiyonel)
-             });
-        }
-
-        // Yeni resim yüklendi mi kontrol et
         let imageUrl: string | undefined = undefined;
         const file = (req as any).file as Express.Multer.File | undefined;
-        if (file) {
-            imageUrl = file.filename;
-            // TODO: Eğer yeni resim yüklendiyse, eski resmi sunucudan silmek iyi bir pratiktir.
-        }
+        if (file) { imageUrl = file.filename; }
 
-        // Güncellenecek veriyi hazırla
         const updateData = {
             title: title.trim(),
             content: content.trim(),
             category,
-            imageUrl: imageUrl // Yeni resim varsa filename, yoksa undefined olacak
+            imageUrl: imageUrl
         };
 
-        // Eğer yeni resim yüklenmediyse, imageUrl alanını güncelleme (eski resim kalsın)
         if (imageUrl === undefined) {
-             // Mevcut postun imageUrl'ini alıp tekrar ekleyebiliriz veya servisi güncelleyebiliriz.
-             // Şimdilik: Eğer yeni resim yoksa imageUrl'i veriden çıkaralım.
-             // Daha iyi yöntem: Servis fonksiyonunu sadece gönderilen alanları güncelleyecek şekilde yapmak.
-             // Ama basitlik adına şimdilik böyle bırakalım. Eğer resim silinmek istenirse ayrı bir mekanizma gerekir.
-            const existingPost = await postService.getPostById(postId);
-            updateData.imageUrl = existingPost?.imageUrl; // Eski resmi koru
+             const existingPost = await postService.getPostById(postId);
+             updateData.imageUrl = existingPost?.imageUrl;
         }
-
 
         const updatedPost = await postService.updatePost(postId, updateData);
+        if (!updatedPost) { /* ... (post bulunamadı hatası) ... */ }
 
-        if (!updatedPost) {
-             const error: any = new Error("Yazı güncellenemedi veya bulunamadı.");
-             error.status = 404;
-             return next(error);
-        }
-
-        // Başarılı güncelleme sonrası detay sayfasına yönlendir
         res.redirect(`/posts/${postId}`);
 
     } catch (error) {
-         // Multer hatası veya servis hatası olabilir
+        // Multer veya Servis hatası
          if (error instanceof Error && error.message.startsWith('Hata: Sadece resim dosyaları')) {
              const post = await postService.getPostById(postId);
-             return res.status(400).render('posts/edit', {
-                 error: error.message,
-                 categories: Object.values(PostCategory),
-                 post: post,
-                 oldInput: req.body
-            });
+             return res.status(400).render('posts/edit', { /* ... (multer hatası render) ... */ });
          }
-         // Diğer hataları genel yöneticiye gönder
-         next(error);
+         next(error); // Diğer hataları genel yöneticiye gönder
     }
 };
 

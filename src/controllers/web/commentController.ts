@@ -1,37 +1,57 @@
 import { Request, Response, NextFunction } from 'express';
 import * as commentService from '../../services/web/commentService';
+import { validationResult } from 'express-validator'; 
+import * as postService from '../../services/web/postService'; // Post bilgilerini tekrar çekmek için
 
 /**
- * Yeni bir yorum oluşturma isteğini işler.
+ * Yeni bir yorum oluşturma isteğini işler (Validasyonlu).
  */
 export const handleCreateComment = async (req: Request, res: Response, next: NextFunction) => {
+    const postId = req.params.id; // URL'den post ID'si
+    const authorId = req.session.userId; // Session'dan yorum yazarının ID'si
+    const { text } = req.body; // Formdan gelen yorum metni
+
+    // 1. Validasyon sonuçlarını kontrol et
+    const errors = validationResult(req);
+
+    // 2. Eğer validasyon hatası varsa...
+    if (!errors.isEmpty()) {
+        try {
+            // Hata mesajını göstermek için post ve mevcut yorumları TEKRAR çekmemiz gerekiyor.
+            const [post, comments] = await Promise.all([
+                postService.getPostById(postId),
+                commentService.getCommentsByPostId(postId)
+            ]);
+
+            if (!post) { // Post bulunamazsa 404
+                 const err: any = new Error("Yorum yapılacak yazı bulunamadı."); err.status = 404; return next(err);
+            }
+
+            // Detay sayfasını, validasyon hataları ve girilen eski yorum metniyle tekrar render et
+            return res.status(400).render('posts/detail', {
+                post: post,
+                comments: comments,
+                commentErrors: errors.array(), // Validasyon hatalarını farklı bir isimle gönderelim
+                oldCommentInput: text, // Girilen eski yorumu geri gönder
+                error: null, // Genel hata olmadığı için
+                activePage: 'post'
+            });
+        } catch (fetchError) {
+             // Post veya yorumları çekerken hata olursa genel yöneticiye gönder
+            return next(fetchError);
+        }
+    }
+
+    // 3. Validasyon hatası yoksa devam et...
+    if (!authorId) { /* ... (giriş kontrolü aynı) ... */ }
+
     try {
-        const { text } = req.body; // Formdan gelen yorum metni
-        const postId = req.params.id; // URL'den post ID'si (/posts/:id/comment)
-        const authorId = req.session.userId; // Session'dan yorum yazarının ID'si
-
-        // Session kontrolü (isAuthenticated zaten yapıyor ama ekstra güvenlik)
-        if (!authorId) {
-            throw new Error("Yorum yapmak için giriş yapmalısınız.");
-        }
-
-        // Basit validasyon: Yorum metni boş olamaz
-        if (!text || text.trim() === '') {
-            // Hata durumunda sayfayı yeniden yükleyebiliriz
-            // Veya bir hata mesajını flash mesaj olarak gönderebiliriz (daha sonra eklenebilir)
-            console.warn(`Boş yorum denemesi: postId=${postId}, userId=${authorId}`);
-            return res.redirect(`/posts/${postId}`); // Aynı sayfaya geri dön
-        }
-
         // Servisi çağırarak yorumu oluştur
         await commentService.createComment(text.trim(), authorId, postId);
-
-        // Başarılı olursa, kullanıcıyı aynı post detay sayfasına geri yönlendir
-        // Bu sayede eklediği yorumu hemen görebilir.
+        // Başarılı olursa aynı post detay sayfasına geri yönlendir
         res.redirect(`/posts/${postId}`);
-
     } catch (error) {
-        // Hata olursa genel hata yöneticisine gönder
+        // Servis hatası olursa genel hata yöneticisine gönder
         next(error);
     }
 };

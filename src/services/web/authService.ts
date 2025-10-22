@@ -114,5 +114,68 @@ export const updateUserProfile = async (
     }
 };
 
-//Opsiyonel: Parola güncelleme için ayrı bir fonksiyon yazmak daha güvenlidir.
-//export const updateUserPassword = async (userId: string, oldPass: string, newPass: string): Promise<void> => { ... }
+/**
+ * YENİ FONKSİYON
+ * Veritabanındaki tüm kullanıcıları getirir (parolalar hariç).
+ * @returns Kullanıcıların dizisi (parola hariç)
+ */
+export const getAllUsers = async (): Promise<Omit<IUser, 'password'>[]> => {
+    try {
+        // Tüm kullanıcıları bul ve select('-password') ile parola alanını hariç tut
+        const users = await UserDB.find().select('-password').sort({ createdAt: -1 }); // En yeni kayıtlar üste gelsin
+        return users;
+    } catch (error) {
+        console.error("Tüm kullanıcılar getirilirken hata:", error);
+        throw new Error("Kullanıcı listesi yüklenirken bir sorun oluştu.");
+    }
+};
+
+/**
+ * YENİ FONKSİYON
+ * Bir kullanıcıyı ve isteğe bağlı olarak ilişkili içeriklerini siler.
+ * DİKKAT: İlişkili postları ve yorumları silmek geri alınamaz!
+ * @param userId Silinecek kullanıcının ID'si
+ * @throws Hata: Kullanıcı bulunamazsa veya veritabanı hatası varsa
+ */
+export const deleteUser = async (userId: string): Promise<void> => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            throw new Error("Geçersiz kullanıcı ID'si.");
+        }
+
+        // Opsiyonel: Kullanıcıyı silmeden önce, admin rolünde olup olmadığını kontrol et
+        // ve son adminin silinmesini engelle (proje gereksinimlerine bağlı)
+        // const userToDelete = await UserDB.findById(userId);
+        // if (userToDelete && userToDelete.role === UserRole.ADMIN) {
+        //     const adminCount = await UserDB.countDocuments({ role: UserRole.ADMIN });
+        //     if (adminCount <= 1) {
+        //         throw new Error("Son admin kullanıcı silinemez.");
+        //     }
+        // }
+
+        // 1. Kullanıcıyı sil
+        const deleteResult = await UserDB.findByIdAndDelete(userId);
+        if (!deleteResult) {
+            throw new Error("Silinecek kullanıcı bulunamadı.");
+        }
+
+        // 2. (Opsiyonel ama Önerilir) Kullanıcının yazdığı postları da sil
+        // DİKKAT: Bu işlem kullanıcının tüm yazılarını kalıcı olarak siler!
+        // Eğer postların kalması isteniyorsa (yazar: "Silinmiş Kullanıcı" gibi), bu kısmı kaldırın.
+        // await PostDB.deleteMany({ author: userId });
+
+        // 3. (Opsiyonel ama Önerilir) Kullanıcının yaptığı yorumları da sil
+        // DİKKAT: Bu işlem kullanıcının tüm yorumlarını kalıcı olarak siler!
+        // Yorumların kalması isteniyorsa bu kısmı kaldırın.
+        // await CommentDB.deleteMany({ author: userId });
+
+        // TODO: Silinen yorumların Post'lardaki referanslarını da temizlemek gerekebilir ($pull ile)
+
+        console.log(`Kullanıcı (${userId}) silindi.`); // Loglama
+
+    } catch (error) {
+        console.error("Kullanıcı silinirken hata:", error);
+        // Controller'a hatayı yeniden fırlat
+        throw new Error(error instanceof Error ? error.message : "Kullanıcı silinirken bir sorun oluştu.");
+    }
+};

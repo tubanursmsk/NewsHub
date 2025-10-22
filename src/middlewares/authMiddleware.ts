@@ -1,93 +1,131 @@
 import { Request, Response, NextFunction } from 'express';
-import PostDB from '../models/postModel';
-import { UserRole } from '../models/userModel'; 
+import PostDB from '../models/postModel'; // isAuthor ve canDeleteComment için gerekli
+import { UserRole } from '../models/userModel'; // isAdmin ve canDeleteComment için gerekli
+import mongoose from 'mongoose'; // isAuthor ve canDeleteComment içinde ObjectId kontrolü için (opsiyonel ama iyi)
 
 /**
- * Kullanıcının oturum açıp açmadığını kontrol eder.
- * Oturum açmamışsa giriş sayfasına yönlendirir.
+ * 1. isAuthenticated: Kullanıcı Giriş Yapmış mı?
+ * Bir rotaya erişim için temel giriş kontrolü.
+ * Giriş yapmamışsa /login'e yönlendirir.
  */
 export const isAuthenticated = (req: Request, res: Response, next: NextFunction) => {
-    // Session'da userId varsa, kullanıcı giriş yapmış demektir.
     if (req.session.userId) {
-        // İstek zincirindeki bir sonraki adıma geçmesine izin ver.
-        next();
+        next(); // Giriş yapmış, devam et
     } else {
-        // Kullanıcı giriş yapmamış, onu giriş sayfasına yönlendir.
-        res.redirect('/login');
+        res.redirect('/login'); // Giriş yapmamış, login'e gönder
     }
 };
 
 /**
- * YENİ FONKSİYON
- * Giriş yapan kullanıcının, işlem yapılan post'un sahibi olup olmadığını kontrol eder.
+ * 2. isAdmin: Kullanıcı Admin mi?
+ */
+export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+    
+    // === HATA AYIKLAMA: Session'daki rolü ve beklenen rolü yazdır ===
+    console.log("isAdmin Middleware Çalıştı.");
+    console.log("Session Rolü (req.session.userRole):", req.session.userRole); 
+    console.log("Beklenen Rol (UserRole.ADMIN):", UserRole.ADMIN);
+    console.log("Eşleşme Durumu:", req.session.userRole === UserRole.ADMIN);
+    // =============================================================
+
+    if (req.session.userRole === UserRole.ADMIN) {
+        console.log("Yetki verildi (Admin).");
+        next(); 
+    } else {
+        console.log("Yetki REDDEDİLDİ.");
+        res.status(403).render('error', {
+            statusCode: 403,
+            message: "Bu sayfaya erişim yetkiniz bulunmamaktadır.",
+            layout: false
+        });
+    }
+};
+
+/**
+ * 2. isAdmin: Kullanıcı Admin mi?
+ * Sadece 'Admin' rolündeki kullanıcıların erişebileceği rotaları korur.
+ * 'isAuthenticated' middleware'inden SONRA kullanılmalıdır.
+ */
+/*
+export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+    // Session'daki userRole'ü kontrol et (Global middleware sayesinde var olmalı)
+    if (req.session.userRole === UserRole.ADMIN) {
+        next(); // Rol Admin, devam et
+    } else {
+        // Rol Admin değilse, yetkisiz erişim hatası ver
+        res.status(403).render('error', {
+            statusCode: 403,
+            message: "Bu sayfaya erişim yetkiniz bulunmamaktadır.",
+            layout: false
+        });
+    }
+};
+*/
+
+/**
+ * 3. isAuthor: Kullanıcı Post'un Sahibi mi?
+ * Bir postu düzenleme veya silme gibi işlemlerde, işlemi yapanın postun yazarı olup olmadığını kontrol eder.
+ * '/posts/:id/edit', '/posts/:id/delete' gibi rotalarda kullanılır.
+ * 'isAuthenticated' middleware'inden SONRA kullanılmalıdır.
  */
 export const isAuthor = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const postId = req.params.id; // URL'den post'un ID'sini al ( /posts/:id/edit gibi)
-        const userId = req.session.userId; // Session'dan kullanıcının ID'sini al
+        const postId = req.params.id;
+        const userId = req.session.userId;
 
-        // Eğer postId veya userId yoksa (beklenmedik durum)
-        if (!postId || !userId) {
-            return res.status(400).send("Geçersiz istek.");
+        if (!postId || !userId || !mongoose.Types.ObjectId.isValid(postId)) {
+             // Geçersiz ID veya session yoksa hata ver
+            return res.status(400).render('error', { statusCode: 400, message: "Geçersiz istek.", layout: false });
         }
 
         const post = await PostDB.findById(postId);
 
-        // Post bulunamadıysa 404 hatası ver
         if (!post) {
             return res.status(404).render('error', { statusCode: 404, message: "Yazı bulunamadı.", layout: false });
         }
 
-        // Post'un yazar ID'si (ObjectId) ile giriş yapan kullanıcının ID'si (string) eşleşiyor mu?
         if (post.author.toString() !== userId) {
-            // Eşleşmiyorsa, yetkisi yok. 403 (Forbidden) hatası ver.
             return res.status(403).render('error', { statusCode: 403, message: "Bu işlem için yetkiniz bulunmamaktadır.", layout: false });
         }
 
-        // Yetkisi var, bir sonraki adıma (kontrolöre) geçebilir.
-        next();
+        next(); // Kullanıcı yazar, devam et
 
     } catch (error) {
-        // Genel bir hata olursa hata yöneticisine gönder
-        next(error);
+        next(error); // Veritabanı vb. hatası olursa genel yöneticiye gönder
     }
 };
 
 /**
- * YENİ FONKSİYON
- * Giriş yapan kullanıcının bir yorumu silme yetkisi olup olmadığını kontrol eder.
- * Yetki kuralları:
- * 1. Kullanıcı 'Admin' ise silebilir.
- * 2. Kullanıcı yorumun yapıldığı post'un sahibi ise silebilir.
+ * 4. canDeleteComment: Kullanıcı Yorumu Silebilir mi?
+ * Bir yorumu silme yetkisini kontrol eder (Admin VEYA Post Sahibi).
+ * '/posts/:postId/comment/:commentId/delete' gibi rotalarda kullanılır.
+ * 'isAuthenticated' middleware'inden SONRA kullanılmalıdır.
  */
 export const canDeleteComment = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // Rotadan post ID'sini alıyoruz (örn: /posts/:postId/comment/:commentId/delete)
-        const { postId } = req.params; 
+        const { postId } = req.params;
         const { userId, userRole } = req.session;
 
-        // Session bilgisi yoksa (beklenmedik durum)
-        if (!userId || !userRole) {
-            return res.status(401).render('error', { statusCode: 401, message: "Bu işlem için giriş yapmalısınız.", layout: false });
+        if (!userId || !userRole || !mongoose.Types.ObjectId.isValid(postId)) {
+            // Session veya geçerli postId yoksa hata ver
+             return res.status(400).render('error', { statusCode: 400, message: "Geçersiz istek veya kimlik doğrulama hatası.", layout: false });
         }
 
-        // Kural 1: Eğer kullanıcı Admin ise, devam etmesine izin ver.
-        if (userRole === UserRole.ADMIN) { // Enum kullanmak daha güvenli
+        // Kural 1: Admin ise direkt devam et
+        if (userRole === UserRole.ADMIN) {
             return next();
         }
 
-        // Kural 2: Eğer kullanıcı post'un sahibi ise, devam etmesine izin ver.
+        // Kural 2: Post sahibi mi diye kontrol et
         const post = await PostDB.findById(postId);
-        // Post var mı VE postun yazarı giriş yapan kullanıcı mı?
         if (post && post.author.toString() === userId) {
-            return next();
+            return next(); // Post sahibi, devam et
         }
 
-        // Yukarıdaki kurallardan hiçbiri karşılanmıyorsa, yetkisi yoktur. 403 hatası ver.
+        // Yetkisi yoksa 403 hatası ver
         res.status(403).render('error', { statusCode: 403, message: "Bu yorumu silme yetkiniz bulunmamaktadır.", layout: false });
 
     } catch (error) {
-        // Genel bir hata olursa hata yöneticisine gönder
-        next(error);
+        next(error); // Veritabanı vb. hatası olursa genel yöneticiye gönder
     }
 };

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { isAuthenticated, isAuthor, canDeleteComment } from '../../middlewares/authMiddleware';
-// Gerekli controller fonksiyonları
+import upload from '../../utils/fileUpload';
 import {
     showHomePage,
     showNewPostForm,
@@ -12,9 +12,9 @@ import {
     handleDeletePost,  
 } from '../../controllers/web/postController';
 import { handleCreateComment, handleDeleteComment} from '../../controllers/web/commentController';
+import { createPostValidationRules, updatePostValidationRules } from '../../validations/post.validator';
+import { commentValidationRules } from '../../validations/comment.validator';
 
-// Dosya yükleme middleware'ini import et
-import upload from '../../utils/fileUpload';
 
 const router = Router();
 
@@ -43,7 +43,8 @@ router.post(
     '/posts',
     isAuthenticated,
     upload.single('postImage'), // Önce resmi yükle (varsa)
-    handleCreatePost            // Sonra veriyi işle
+    handleCreatePost   ,         // Sonra veriyi işle
+    createPostValidationRules()
 );
 
 // YAZI DETAY SAYFASI ROTASI
@@ -62,6 +63,7 @@ router.post(
     isAuthenticated, 
     isAuthor, 
     upload.single('postImage'), // Önce resim (varsa) yüklenir
+    updatePostValidationRules(),
     handleUpdatePost            // Sonra güncelleme işlenir
 );
 
@@ -77,7 +79,7 @@ router.post('/posts/:id/delete', isAuthenticated, isAuthor, handleDeletePost);
 // YENİ YORUM EKLEME (İŞLEME)
 // Sadece giriş yapmış kullanıcılar yorum yapabilir
 // Rota: /posts/POST_ID/comment şeklinde olacak
-router.post('/posts/:id/comment', isAuthenticated, handleCreateComment);
+router.post('/posts/:id/comment', isAuthenticated, handleCreateComment, commentValidationRules());
 
 // YORUM SİLME (İŞLEME)
 // Sadece admin veya post sahibi erişebilir
