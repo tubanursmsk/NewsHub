@@ -15,8 +15,8 @@ import authWebRoutes from './routes/web/authRoutes';
 import postWebRoutes from './routes/web/postRoutes';
 import adminWebRoutes from './routes/web/adminRoutes';
 
-// API Rotaları (Oluşturulmuş olmalı)
-import userApiRoutes from '../routes/api/user.routes';      
+// API Rotaları 
+import userApiRoutes from './routes/api/user.routes';      
 import categoryApiRoutes from './routes/api/category.routes';
 import newsApiRoutes from './routes/api/news.routes';        
 import commentApiRoutes from './routes/api/comment.routes';  
@@ -28,14 +28,9 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// === Middleware'ler ===
 
-// Body Parsers (JSON ve URL Encoded)
-app.use(express.json()); // API için
-app.use(express.urlencoded({ extended: true })); // Web formları için
-
-// Session Middleware (Daha çok Web için kullanılır)
-// Not: API tarafı JWT kullandığı için session'a bağımlı olmamalıdır.
+// Session Middleware
+// Session tipleri (userId, userRole) artık src/types/express/index.d.ts dosyasında tanımlı
 app.use(session({
     secret: process.env.SESSION_SECRET || 'varsayilan_cok_gizli_anahtar',
     resave: false,
@@ -53,7 +48,8 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.originalUrl.startsWith('/api/v1')) {
         return next(); // API isteğiyse atla
     }
-    // Web isteği ise session'dan user bilgisini locals'a ekle
+    /// Web isteği ise session'dan user bilgisini locals'a ekle
+    // Session tipleri index.d.ts'de tanımlandığı için artık hata vermemeli
     if (req.session.userId && req.session.userRole) {
         res.locals.user = { id: req.session.userId, role: req.session.userRole };
     } else {
@@ -98,6 +94,11 @@ app.use('/admin', adminWebRoutes); // /admin/dashboard vb.
 
 // 404 Handler
 app.use((req: Request, res: Response, next: NextFunction) => {
+    // API isteği ise JSON dön
+    if (req.originalUrl.startsWith('/api/v1')) {
+         return res.status(404).json({ status: 'error', message: 'Endpoint not found.' });
+    }
+    // Web isteği ise EJS render et
     res.status(404).render('error', {
         statusCode: 404,
         message: "Aradığınız sayfa bulunamadı.",
