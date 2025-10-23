@@ -1,35 +1,35 @@
 <div class="row justify-content-center">
     <div class="col-md-8">
         
-        <h1 class="news-title display-5 mb-3"><%= news.title %></h1>
+        <h1 class="post-title display-5 mb-3"><%= post.title %></h1>
 
         <div class="d-flex align-items-center text-muted mb-4">
             <div>
-                <strong><%= news.author ? news.author.name : 'Bilinmeyen Yazar' %></strong> <br>
+                <strong><%= post.author ? post.author.name : 'Bilinmeyen Yazar' %></strong> <br>
                 <small>
-                    <%= new Date(news.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) %>
-                    <% if (news.category && news.category !== 'Diğer') { %> 
-                        <span class="badge bg-secondary ms-1"><%= news.category %></span> 
+                    <%= new Date(post.createdAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' }) %>
+                    <% if (post.category && post.category !== 'Diğer') { %> 
+                        <span class="badge bg-secondary ms-1"><%= post.category %></span> 
                     <% } %>
                 </small>
             </div>
             
-            <% if (user && news.author && user.id == news.author._id.toString()) { %>
+            <% if (user && post.author && user.id == post.author._id.toString()) { %>
                 <div class="ms-auto d-flex gap-2">
-                    <a href="/news/<%= news._id %>/edit" class="btn btn-sm btn-outline-secondary">Düzenle</a>
-                    <form action="/news/<%= news._id %>/delete" method="news" class="d-inline" onsubmit="return confirm('Bu yazıyı silmek istediğinizden emin misiniz?');">
+                    <a href="/posts/<%= post._id %>/edit" class="btn btn-sm btn-outline-secondary">Düzenle</a>
+                    <form action="/posts/<%= post._id %>/delete" method="POST" class="d-inline" onsubmit="return confirm('Bu yazıyı silmek istediğinizden emin misiniz?');">
                         <button type="submit" class="btn btn-sm btn-outline-danger">Sil</button>
                     </form>
                 </div>
             <% } %>
         </div>
 
-        <% if (news.imageUrl) { %>
-            <img src="/uploads/<%= news.imageUrl %>" class="img-fluid rounded mb-4 shadow-sm" alt="<%= news.title %>">
+        <% if (post.imageUrl) { %>
+            <img src="/uploads/<%= post.imageUrl %>" class="img-fluid rounded mb-4 shadow-sm" alt="<%= post.title %>">
         <% } %>
 
-        <div class="news-content fs-5 mb-5"> <%# fs-5 ile fontu biraz büyüttük %>
-            <%- news.content %> 
+        <div class="post-content fs-5 mb-5"> <%# fs-5 ile fontu biraz büyüttük %>
+            <%- post.content %> 
         </div>
 
         <hr class="my-5">
@@ -49,7 +49,7 @@
                             </ul>
                         </div>
                     <% } %>
-                    <form action="/news/<%= news._id %>/comment" method="news">
+                    <form action="/posts/<%= post._id %>/comment" method="POST">
                         <div class="mb-3">
                             <textarea class="form-control <%= (typeof commentErrors !== 'undefined' && commentErrors.length > 0) ? 'is-invalid' : '' %>" <%# Hata Class'ı %>
                                       name="text" 
@@ -78,11 +78,11 @@
                             <small class="text-muted text-nowrap"><%= new Date(comment.createdAt).toLocaleString('tr-TR', { day: 'numeric', month: 'short', hour: '2-digit', minute:'2-digit' }) %></small>
                             
                             <% 
-                                const isnewsOwner = user && news.author && user.id === news.author._id.toString();
+                                const isPostOwner = user && post.author && user.id === post.author._id.toString();
                                 const isAdmin = user && user.role === 'Admin';
                             %>
-                            <% if (isnewsOwner || isAdmin) { %>
-                                <form class="mt-2" action="/news/<%= news._id %>/comment/<%= comment._id %>/delete" method="news" onsubmit="return confirm('Bu yorumu silmek istediğinizden emin misiniz?');">
+                            <% if (isPostOwner || isAdmin) { %>
+                                <form class="mt-2" action="/posts/<%= post._id %>/comment/<%= comment._id %>/delete" method="POST" onsubmit="return confirm('Bu yorumu silmek istediğinizden emin misiniz?');">
                                     <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-1 border-0">
                                         <i class="bi bi-trash"></i> Sil
                                     </button>

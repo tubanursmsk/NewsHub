@@ -1,6 +1,6 @@
-import { jsonResult } from "../../models/result";
-import CommentDB, { IComment } from "../../models/commentModel";
-import UserDB from "../../models/userModel";
+import { jsonResult } from "../models/result";
+import CommentDB, { IComment } from "../models/commentModel";
+import UserDB from "../models/userModel";
 import mongoose from "mongoose";
 
 export const createComment = async (commentData: Partial<IComment>, userId: string, userName: string) => {

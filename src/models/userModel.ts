@@ -1,13 +1,16 @@
 import mongoose, { Document, Schema } from "mongoose";
-import { eRoles } from "../utils/eRoles";
 
-
+// Rolleri tanımlamak için bir enum kullanmak en iyi pratiktir.
+export enum UserRole {
+    ADMIN = 'Admin',
+    USER = 'User'
+}
 
 export interface IUser extends Document {
     name: string;
     email: string;
     password: string; // Bu alanı hash'lenmiş parolayı saklayacak şekilde kullanacağız
-    roles: eRoles; // 'role' alanı eklendi
+    role: UserRole; // 'role' alanı eklendi
     jwt?: string,
     createdAt?: Date; // Alan adını 'createdAt' olarak değiştirmek daha standart
 }
@@ -16,9 +19,10 @@ const UserSchema: Schema<IUser> = new Schema({
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    roles: { // 'role' şemaya eklendi
+    role: { // 'role' şemaya eklendi
         type: String,
-        default: eRoles.User // Varsayılan rol 'User' olarak ayarlandı
+        enum: Object.values(UserRole), // Sadece 'Admin' veya 'User' olabilir
+        default: UserRole.USER // Varsayılan rol 'User' olarak ayarlandı
     },
     jwt: {type: String},
     createdAt: { // Alan adı 'createdAt' ve varsayılan değer 'Date.now' olarak güncellendi

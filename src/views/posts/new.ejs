@@ -17,7 +17,7 @@
     <div class="alert alert-danger" role="alert"><%= error %></div>
     <% } %>
 
-    <form action="/news" method="POST" enctype="multipart/form-data">
+    <form action="/posts" method="POST" enctype="multipart/form-data">
       <%# Başlık %>
       <div class="mb-3">
         <label for="title" class="form-label">Başlık:</label>
@@ -33,12 +33,12 @@
 
       <%# Resim %>
       <div class="mb-3">
-        <label for="newsImage" class="form-label">Yazı Görseli (Opsiyonel):</label>
+        <label for="postImage" class="form-label">Yazı Görseli (Opsiyonel):</label>
         <input
           class="form-control" <%# Resim için is-invalid eklemiyoruz, genellikle hata mesajı yeterli %>
           type="file"
-          id="newsImage"
-          name="newsImage"
+          id="postImage"
+          name="postImage"
           accept="image/png, image/jpeg, image/jpg, image/gif, image/webp"
         />
       </div>

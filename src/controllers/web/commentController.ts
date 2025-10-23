@@ -1,13 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import * as commentService from '../../services/web/commentService';
 import { validationResult } from 'express-validator'; 
-import * as newsService from '../../services/web/newsService'; // Post bilgilerini tekrar çekmek için
+import * as postService from '../../services/web/postService'; // Post bilgilerini tekrar çekmek için
 
 /**
  * Yeni bir yorum oluşturma isteğini işler (Validasyonlu).
  */
 export const handleCreateComment = async (req: Request, res: Response, next: NextFunction) => {
-    const newsId = req.params.id; // URL'den post ID'si
+    const postId = req.params.id; // URL'den post ID'si
     const authorId = req.session.userId; // Session'dan yorum yazarının ID'si
     const { text } = req.body; // Formdan gelen yorum metni
 
@@ -18,18 +18,18 @@ export const handleCreateComment = async (req: Request, res: Response, next: Nex
     if (!errors.isEmpty()) {
         try {
             // Hata mesajını göstermek için post ve mevcut yorumları TEKRAR çekmemiz gerekiyor.
-            const [news, comments] = await Promise.all([
-                newsService.getPostById(newsId),
-                commentService.getCommentsByPostId(newsId)
+            const [post, comments] = await Promise.all([
+                postService.getPostById(postId),
+                commentService.getCommentsByPostId(postId)
             ]);
 
-            if (!news) { // Post bulunamazsa 404
+            if (!post) { // Post bulunamazsa 404
                  const err: any = new Error("Yorum yapılacak yazı bulunamadı."); err.status = 404; return next(err);
             }
 
             // Detay sayfasını, validasyon hataları ve girilen eski yorum metniyle tekrar render et
             return res.status(400).render('posts/detail', {
-                news: news,
+                post: post,
                 comments: comments,
                 commentErrors: errors.array(), // Validasyon hatalarını farklı bir isimle gönderelim
                 oldCommentInput: text, // Girilen eski yorumu geri gönder
@@ -47,9 +47,9 @@ export const handleCreateComment = async (req: Request, res: Response, next: Nex
 
     try {
         // Servisi çağırarak yorumu oluştur
-        await commentService.createComment(text.trim(), authorId, newsId);
+        await commentService.createComment(text.trim(), authorId, postId);
         // Başarılı olursa aynı post detay sayfasına geri yönlendir
-        res.redirect(`/news/${newsId}`);
+        res.redirect(`/posts/${postId}`);
     } catch (error) {
         // Servis hatası olursa genel hata yöneticisine gönder
         next(error);
@@ -63,13 +63,13 @@ export const handleCreateComment = async (req: Request, res: Response, next: Nex
 export const handleDeleteComment = async (req: Request, res: Response, next: NextFunction) => {
     try {
         // Rotadan hem post hem de comment ID'sini alıyoruz
-        const { newsId, commentId } = req.params;
+        const { postId, commentId } = req.params;
 
         // Servisi çağırarak yorumu sil
         await commentService.deleteComment(commentId);
 
         // Başarılı silme sonrası kullanıcıyı tekrar aynı yazı detay sayfasına yönlendir.
-        res.redirect(`/news/${newsId}`);
+        res.redirect(`/posts/${postId}`);
 
     } catch (error) {
         // Hata olursa genel hata yöneticisine gönder

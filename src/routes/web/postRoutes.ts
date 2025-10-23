@@ -10,9 +10,9 @@ import {
     showEditPostForm, 
     handleUpdatePost, 
     handleDeletePost,  
-} from '../../controllers/web/newsController';
+} from '../../controllers/web/postController';
 import { handleCreateComment, handleDeleteComment} from '../../controllers/web/commentController';
-import { createPostValidationRules, updatePostValidationRules } from '../../validations/news.validator';
+import { createPostValidationRules, updatePostValidationRules } from '../../validations/post.validator';
 import { commentValidationRules } from '../../validations/comment.validator';
 
 

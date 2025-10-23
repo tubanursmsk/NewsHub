@@ -1,5 +1,4 @@
-import UserDB, { IUser} from '../../models/userModel';
-import { eRoles } from '../../utils/eRoles';
+import UserDB, { IUser, UserRole } from '../../models/userModel';
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
 

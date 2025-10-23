@@ -98,7 +98,7 @@ export const handleLogin = async (req: Request, res: Response, next: NextFunctio
         
         // Session bilgilerini ayarla
         req.session.userId = user._id.toString(); 
-        req.session.eRoles = user.roles;
+        req.session.userRole = user.role;
 
         // Dashboard'a yönlendir
         res.redirect('/dashboard');

@@ -20,18 +20,18 @@
 
 
     <h1 class="mb-4 visually-hidden">Anasayfa</h1>
-    <% if (news && news.length > 0) { %> <% news.forEach(news => { %>
+    <% if (posts && posts.length > 0) { %> <% posts.forEach(post => { %>
 
     <div class="card mb-4 shadow-sm overflow-hidden">
       <div class="row g-0">
         <div class="col-md-4">
-          <% const imageSource = news.imageUrl ? '/uploads/' + news.imageUrl :
+          <% const imageSource = post.imageUrl ? '/uploads/' + post.imageUrl :
           'https://via.placeholder.com/300x200?text=NewsHub'; %>
-          <a href="/news/<%= news._id %>">
+          <a href="/posts/<%= post._id %>">
             <img
               src="<%= imageSource %>"
               class="img-fluid rounded-start w-100 h-100 object-fit-cover"
-              alt="<%= news.title %>"
+              alt="<%= post.title %>"
               style="min-height: 180px"
             />
           </a>
@@ -40,27 +40,27 @@
           <div class="card-body d-flex flex-column h-100">
             <p class="card-text mb-1">
               <small class="text-body-secondary">
-                <%= news.author ? news.author.name : 'Bilinmeyen Yazar' %> - <%=
-                new Date(news.createdAt).toLocaleDateString('tr-TR', { day:
-                'numeric', month: 'long' }) %> <% if (news.category &&
-                news.category !== 'Diğer') { %>
+                <%= post.author ? post.author.name : 'Bilinmeyen Yazar' %> - <%=
+                new Date(post.createdAt).toLocaleDateString('tr-TR', { day:
+                'numeric', month: 'long' }) %> <% if (post.category &&
+                post.category !== 'Diğer') { %>
                 <span class="badge bg-secondary ms-1"
-                  ><%= news.category %></span
+                  ><%= post.category %></span
                 >
                 <% } %>
               </small>
             </p>
-            <h5 class="card-title news-title mb-2">
+            <h5 class="card-title post-title mb-2">
               <%# mb-1 yerine mb-2 %>
-              <a href="/news/<%= news._id %>"><%= news.title %></a>
+              <a href="/posts/<%= post._id %>"><%= post.title %></a>
             </h5>
             <p class="card-text text-secondary">
-              <% const snippet = news.content.length > 100 ?
-              news.content.replace(/<[^>]*>/g, '').substring(0, 100) + '...' :
-              news.content.replace(/<[^>]*>/g, ''); %> <%= snippet %>
+              <% const snippet = post.content.length > 100 ?
+              post.content.replace(/<[^>]*>/g, '').substring(0, 100) + '...' :
+              post.content.replace(/<[^>]*>/g, ''); %> <%= snippet %>
             </p>
             <p class="card-text mt-auto">
-              <a href="/news/<%= news._id %>" class="text-primary fw-semibold"
+              <a href="/posts/<%= post._id %>" class="text-primary fw-semibold"
                 >Devamını Oku →</a
               >
             </p>
@@ -77,7 +77,7 @@
     <div class="text-center p-5 border rounded bg-light">
       <p class="lead">Henüz hiç yazı yayınlanmamış.</p>
       <% if (user && user.id) { %>
-      <a href="/news/new" class="btn btn-primary mt-3">İlk Yazıyı Sen Ekle</a>
+      <a href="/posts/new" class="btn btn-primary mt-3">İlk Yazıyı Sen Ekle</a>
       <% } %>
     </div>
     <% } %>

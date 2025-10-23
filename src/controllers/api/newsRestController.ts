@@ -1,7 +1,7 @@
 import express from 'express'
-import { AuthRequest, checkRole, verifyToken } from '../../middlewares/jwtAuth';
-import { eRoles } from '../../utils/eRoles';
-import { addNews, newsListAll, removeNews, searchNews, updateNews } from '../../services/api/newsService';
+import { AuthRequest, checkRole, verifyToken } from '../configs/auth';
+import { eRoles } from '../utils/eRoles';
+import { addNews, newsListAll, removeNews, searchNews, updateNews } from '../services/newsService';
 import { JwtPayload } from 'jsonwebtoken';
 
 const newsRestController = express.Router()

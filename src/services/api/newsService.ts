@@ -1,7 +1,7 @@
-import { IResult, jsonResult } from "../../models/result";
-import News, { INews } from "../../models/newsModel";
+import { IResult, jsonResult } from "../models/result";
+import News, { INews } from "../models/newsModel";
 import mongoose from "mongoose";
-import Category from "../../models/categoryModel";
+import Category from "../models/category";
 
 export const addNews = async (data: INews, userid: any) => {
   try {

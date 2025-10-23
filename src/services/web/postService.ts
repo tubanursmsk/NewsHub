@@ -1,6 +1,6 @@
+import PostDB, { IPost } from '../../models/postModel'; 
 import mongoose from 'mongoose';
-import { INews } from '../../models/newsModel';
-import NewsDB, { PostCategory } from '../../models/newsModel';
+import { PostCategory } from '../../models/postModel';
 import CommentDB from '../../models/commentModel'; // YENİ: İlişkili yorumları silmek için gerekli
 /**
  * Veritabanına yeni bir post oluşturur.
@@ -17,7 +17,7 @@ export const createPost = async (
     authorId: string, // Bu string olarak kalacak
     category: PostCategory, 
     imageUrl?: string
-): Promise<INews> => { 
+): Promise<IPost> => { 
     try {
         // newPostData objesinin tipini belirtmeye gerek yok, Mongoose halleder.
         const newPostData = { 
@@ -28,7 +28,7 @@ export const createPost = async (
             imageUrl: imageUrl || undefined // Eğer imageUrl yoksa undefined olsun
         };
        
-        const newPost = new NewsDB(newPostData);
+        const newPost = new PostDB(newPostData);
         return await newPost.save();
     } catch (error) {
         console.error("Post oluşturulurken veritabanı hatası:", error);
@@ -44,12 +44,12 @@ export const createPost = async (
  * En yeniden en eskiye doğru sıralar.
  * @returns Tüm postların dizisi
  */
-export const getAllPosts = async (): Promise<INews[]> => {
+export const getAllPosts = async (): Promise<IPost[]> => {
     try {
-        const newss = await NewsDB.find()
+        const posts = await PostDB.find()
             .populate('author', 'name') 
             .sort({ createdAt: -1 }); 
-        return newss;
+        return posts;
     } catch (error) {
         console.error("Tüm postlar getirilirken hata:", error);
         throw new Error("Yazılar yüklenirken bir sorun oluştu."); 
@@ -62,12 +62,12 @@ export const getAllPosts = async (): Promise<INews[]> => {
  * @param authorId Kullanıcı ID'si (session'dan alınacak)
  * @returns Kullanıcıya ait postların dizisi
  */
-export const getPostsByAuthor = async (authorId: string): Promise<INews[]> => {
+export const getPostsByAuthor = async (authorId: string): Promise<IPost[]> => {
     try {
         // 'author' alanı verilen authorId ile eşleşen postları bul ve sırala
-        const news = await NewsDB.find({ author: authorId })
+        const posts = await PostDB.find({ author: authorId })
             .sort({ createdAt: -1 }); // Populate'a burada gerek yok, zaten kendi yazıları
-        return news;
+        return posts;
     } catch (error) {
         console.error("Yazara ait postlar getirilirken hata:", error);
         throw new Error("Yazılarınız yüklenirken bir sorun oluştu.");
@@ -77,19 +77,19 @@ export const getPostsByAuthor = async (authorId: string): Promise<INews[]> => {
 
 /**
  * ID'ye göre tek bir postu getirir. Yazar bilgilerini de populate eder.
- * @param newsId Getirilecek post'un ID'si
+ * @param postId Getirilecek post'un ID'si
  * @returns Post nesnesi veya bulunamazsa null
  * @throws Hata: Veritabanı hatası varsa
  */
-export const getPostById = async (newsId: string): Promise<INews | null> => {
+export const getPostById = async (postId: string): Promise<IPost | null> => {
     try {
         // ID'nin geçerli bir ObjectId formatında olup olmadığını kontrol etmek iyi bir pratiktir
-        if (!mongoose.Types.ObjectId.isValid(newsId)) {
+        if (!mongoose.Types.ObjectId.isValid(postId)) {
             return null; // Geçersiz ID ise null döndür
         }
         
         // Post'u ID'ye göre bul ve 'author' alanını User modelinden 'name' ile doldur
-        const post = await NewsDB.findById(newsId).populate('author', 'name');
+        const post = await PostDB.findById(postId).populate('author', 'name');
         return post;
     } catch (error) {
         console.error("ID'ye göre post getirilirken hata:", error);
@@ -101,22 +101,22 @@ export const getPostById = async (newsId: string): Promise<INews | null> => {
 /**
  * YENİ FONKSİYON
  * Veritabanındaki bir post'u günceller.
- * @param newsId Güncellenecek post'un ID'si
+ * @param postId Güncellenecek post'un ID'si
  * @param data Yeni başlık, içerik, kategori ve resim yolu bilgisi
  * @returns Güncellenmiş post nesnesi veya bulunamazsa null
  */
 export const updatePost = async (
-    newsId: string,
+    postId: string,
     data: { title: string; content: string; category: PostCategory; imageUrl?: string }
-): Promise<INews | null> => {
+): Promise<IPost | null> => {
     try {
         // Opsiyonel: Güncellemeden önce ID'nin geçerliliğini kontrol et
-        if (!mongoose.Types.ObjectId.isValid(newsId)) {
+        if (!mongoose.Types.ObjectId.isValid(postId)) {
             return null;
         }
         // findByIdAndUpdate: ID'ye göre bulur ve verilen data ile günceller.
         // { new: true } seçeneği, güncellenmiş (yeni) dökümanı döndürmesini sağlar.
-        return await NewsDB.findByIdAndUpdate(newsId, data, { new: true, runValidators: true }); // runValidators: Modeldeki kuralları uygular
+        return await PostDB.findByIdAndUpdate(postId, data, { new: true, runValidators: true }); // runValidators: Modeldeki kuralları uygular
     } catch (error) {
         console.error("Post güncellenirken hata:", error);
         if (error instanceof mongoose.Error.ValidationError) {
@@ -130,27 +130,27 @@ export const updatePost = async (
  * YENİ FONKSİYON
  * Veritabanından bir post'u siler.
  * TODO: İlişkili yorumları da silmek veya post silinemez kuralı eklemek düşünülebilir.
- * @param newsId Silinecek post'un ID'si
+ * @param postId Silinecek post'un ID'si
  */
-export const deletePost = async (newsId: string): Promise<void> => {
+export const deletePost = async (postId: string): Promise<void> => {
   try {
-        if (!mongoose.Types.ObjectId.isValid(newsId)) {
+        if (!mongoose.Types.ObjectId.isValid(postId)) {
             throw new Error("Geçersiz yazı ID'si.");
         }
         // İlişkili yorumları da silmek için önce yorumları bul ve sil
-        await CommentDB.deleteMany({ news: newsId }); // <-- YORUMLARI SİLME EKLENDİ
+        await CommentDB.deleteMany({ post: postId }); // <-- YORUMLARI SİLME EKLENDİ
 
         // Sonra postu sil
-        const result = await NewsDB.findByIdAndDelete(newsId);
+        const result = await PostDB.findByIdAndDelete(postId);
         if (!result) {
             throw new Error("Silinecek yazı bulunamadı.");
         }
-        console.log(`Post (${newsId}) ve ilişkili yorumlar silindi.`); // Loglama güncellendi
+        console.log(`Post (${postId}) ve ilişkili yorumlar silindi.`); // Loglama güncellendi
 
     } catch (error) {
         console.error("Post silinirken hata:", error);
         throw new Error("Yazı silinirken bir sorun oluştu.");
     }
 };
-
+// ... (diğer fonksiyonlar: updatePost, deletePost vb.) ...
 

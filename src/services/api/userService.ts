@@ -1,8 +1,8 @@
-import { IResult, jsonResult } from "../../models/result";
-import UserDB, { IUser } from "../../models/userModel";
+import { IResult, jsonResult } from "../models/result";
+import UserDB, { IUser } from "../models/userModel";
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
-import { SECRET_KEY } from "../../middlewares/jwtAuth";
+import { SECRET_KEY } from "../configs/auth";
 
 export const register = async (user: IUser) => {
     // find user - email control

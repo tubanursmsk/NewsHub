@@ -1,6 +1,6 @@
 import express from 'express'
-import {login, register} from '../../services/api/userService'
-import { IUser } from '../../models/userModel'
+import {login, register} from '../services/userService'
+import { IUser } from '../models/userModel'
 const userRestController = express.Router()
 
 /**
@@ -23,9 +23,9 @@ const userRestController = express.Router()
  *           schema:
  *             $ref: '#/components/schemas/User'
  *           example:
- *             name: "Zehra Bil"
- *             email: "zehra@mail.com"
- *             password: "123456"
+ *             name: "johndoe"
+ *             email: "johndoe@example.com"
+ *             password: "StrongPassword123!"
  *     responses:
  *       201:
  *         description: User registered successfully
