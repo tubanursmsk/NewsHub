@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 // Kategorileri bir enum olarak tanımlamak daha güvenli olabilir
-export enum PostCategory {
+export enum NewsCategory {
     TEKNOLOJI = 'Teknoloji',
     BILIM = 'Bilim',
     YAPAY_ZEKA = 'Yapay Zekâ',
@@ -25,7 +25,7 @@ const NewsSchema: Schema<INews> = new Schema({
      title: { type: String, required: true, minlength: 2, trim: true },
     content: { type: String, required: true, minlength: 2 },
     imageUrl: { type: String, required: false }, 
-    category: { type: Schema.Types.ObjectId, ref: "Category", required: true, default: PostCategory.DIGER  },
+    category: { type: Schema.Types.ObjectId, ref: "Category", required: true, default: NewsCategory.DIGER  },
     author: { type: Schema.Types.ObjectId, ref: "User", required: true },
     comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
 },
@@ -34,5 +34,5 @@ const NewsSchema: Schema<INews> = new Schema({
   }
 );
 
-const NewsDB = mongoose.model<INews>('Post', NewsSchema);
+const NewsDB = mongoose.model<INews>('News', NewsSchema);
 export default NewsDB;

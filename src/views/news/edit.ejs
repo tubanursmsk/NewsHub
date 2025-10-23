@@ -1,7 +1,7 @@
 <div class="row justify-content-center">
     <div class="col-md-8">
         <h1 class="mb-4">Yazıyı Düzenle</h1>
-        <a href="/posts/<%= post._id %>">Yazıya Geri Dön</a> | 
+        <a href="/news/<%= news._id %>">Yazıya Geri Dön</a> | 
         <a href="/dashboard">Panelime Dön</a>
         <hr>
 
@@ -16,7 +16,7 @@
             <div class="alert alert-danger"><%= error %></div>
         <% } %>
         
-        <form action="/posts/<%= post._id %>/update" method="POST" enctype="multipart/form-data">
+        <form action="/news/<%= news._id %>/update" method="POST" enctype="multipart/form-data">
             
             <%# Başlık %>
             <div class="mb-3">
@@ -25,23 +25,23 @@
                        class="form-control <%= (typeof errors !== 'undefined' && errors.find(e => e.path === 'title')) ? 'is-invalid' : '' %>"
                        id="title" 
                        name="title" 
-                       value="<%= typeof oldInput !== 'undefined' ? oldInput.title : post.title %>" <%# Hata varsa eski girdi, yoksa mevcut başlık %>
+                       value="<%= typeof oldInput !== 'undefined' ? oldInput.title : news.title %>" <%# Hata varsa eski girdi, yoksa mevcut başlık %>
                        required>
             </div>
 
             <%# Resim %>
             <div class="mb-3">
-                <label for="postImage" class="form-label">Yazı Görseli (Değiştirmek için yenisini seçin):</label>
-                <% if (post.imageUrl) { %>
+                <label for="newsImage" class="form-label">Yazı Görseli (Değiştirmek için yenisini seçin):</label>
+                <% if (news.imageUrl) { %>
                     <div class="mb-2">
-                        <img src="/uploads/<%= post.imageUrl %>" alt="Mevcut Resim" style="max-height: 150px;" class="img-thumbnail">
+                        <img src="/uploads/<%= news.imageUrl %>" alt="Mevcut Resim" style="max-height: 150px;" class="img-thumbnail">
                         <small class="d-block text-muted">Mevcut Resim</small>
                     </div>
                 <% } %>
                 <input class="form-control" 
                        type="file" 
-                       id="postImage" 
-                       name="postImage" 
+                       id="newsImage" 
+                       name="newsImage" 
                        accept="image/png, image/jpeg, image/jpg, image/gif, image/webp"> 
             </div>
 
@@ -53,7 +53,7 @@
                     <option disabled value="">Kategori Seçiniz...</option>
                     <% categories.forEach(cat => { %>
                         <%# Hata varsa eski seçimi, yoksa mevcut kategoriyi seçili yap %>
-                        <option value="<%= cat %>" <%= (typeof oldInput !== 'undefined' ? oldInput.category : post.category) === cat ? 'selected' : '' %>><%= cat %></option> 
+                        <option value="<%= cat %>" <%= (typeof oldInput !== 'undefined' ? oldInput.category : news.category) === cat ? 'selected' : '' %>><%= cat %></option> 
                     <% }) %>
                 </select>
             </div>
@@ -65,11 +65,11 @@
                           id="content" 
                           name="content" 
                           rows="15" 
-                          required><%= typeof oldInput !== 'undefined' ? oldInput.content : post.content %></textarea> <%# Hata varsa eski girdi, yoksa mevcut içerik %>
+                          required><%= typeof oldInput !== 'undefined' ? oldInput.content : news.content %></textarea> <%# Hata varsa eski girdi, yoksa mevcut içerik %>
             </div>
             
             <button type="submit" class="btn btn-primary">Güncelle</button>
-            <a href="/posts/<%= post._id %>" class="btn btn-secondary ms-2">İptal</a>
+            <a href="/news/<%= news._id %>" class="btn btn-secondary ms-2">İptal</a>
         </form>
     </div>
 </div>

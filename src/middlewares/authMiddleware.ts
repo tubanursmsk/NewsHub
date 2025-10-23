@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
-import PostDB from '../models/newsModel';
+import NewsDB from '../models/newsModel';
 import { eRoles } from '../utils/eRoles';
 
 /**
@@ -43,10 +43,10 @@ export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
  */
 export const isAuthor = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const postId = req.params.id;
+        const newsId = req.params.id;
         const userId = req.session.userId;
 
-        if (!postId || !userId || !mongoose.Types.ObjectId.isValid(postId)) {
+        if (!newsId || !userId || !mongoose.Types.ObjectId.isValid(newsId)) {
             return res.status(400).render('error', {
                 statusCode: 400,
                 message: 'Geçersiz istek.',
@@ -54,8 +54,8 @@ export const isAuthor = async (req: Request, res: Response, next: NextFunction) 
             });
         }
 
-        const post = await PostDB.findById(postId);
-        if (!post) {
+        const news = await NewsDB.findById(newsId);
+        if (!news) {
             return res.status(404).render('error', {
                 statusCode: 404,
                 message: 'Yazı bulunamadı.',
@@ -63,7 +63,7 @@ export const isAuthor = async (req: Request, res: Response, next: NextFunction) 
             });
         }
 
-        if (post.author.toString() !== userId) {
+        if (news.author.toString() !== userId) {
             return res.status(403).render('error', {
                 statusCode: 403,
                 message: 'Bu işlem için yetkiniz bulunmamaktadır.',
@@ -100,8 +100,8 @@ export const canDeleteComment = async (req: Request, res: Response, next: NextFu
         }
 
         // Kural 2: Post sahibi mi kontrol et
-        const post = await PostDB.findById(newsId);
-        if (post && post.author.toString() === userId) {
+        const news = await NewsDB.findById(newsId);
+        if (news && news.author.toString() === userId) {
             return next();
         }
 

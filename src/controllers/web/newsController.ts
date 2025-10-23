@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 // Servis ve Model importları (yollarının doğru olduğundan emin ol)
-import * as postService from '../../services/web/newsService';
+import * as newsService from '../../services/web/newsService';
 import * as commentService from '../../services/web/commentService';
-import { PostCategory } from '../../models/newsModel'; // Enum importu
+import { NewsCategory } from '../../models/newsModel'; // Enum importu
 import { validationResult } from 'express-validator';
 
 /**
@@ -10,7 +10,7 @@ import { validationResult } from 'express-validator';
  */
 export const showHomePage = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const posts = await postService.getAllPosts();
+        const posts = await newsService.getAllPosts();
         res.render('home', {
             posts: posts,
             activePage: 'home' // Sidebar için aktif sayfa
@@ -27,9 +27,9 @@ export const showHomePage = async (req: Request, res: Response, next: NextFuncti
  */
 export const showNewPostForm = (req: Request, res: Response, next: NextFunction) => {
     try {
-        res.render('posts/new', {
+        res.render('news/new', {
             error: null,
-            categories: Object.values(PostCategory),
+            categories: Object.values(NewsCategory),
             oldInput: { title: '', content: '', category: '' },
             activePage: 'newPost' // Sidebar için aktif sayfa (opsiyonel)
         });
@@ -50,10 +50,10 @@ export const handleCreatePost = async (req: Request, res: Response, next: NextFu
     // 2. Eğer validasyon hatası varsa...
     if (!errors.isEmpty()) {
         // Formu, validasyon hataları ve eski verilerle tekrar render et
-        return res.status(400).render('posts/new', {
+        return res.status(400).render('news/new', {
             errors: errors.array(), // Hataları gönder
             oldInput: { title, content, category }, // Eski veriyi gönder
-            categories: Object.values(PostCategory),
+            categories: Object.values(NewsCategory),
             error: null, // Genel hata yok
             activePage: 'newPost'
         });
@@ -67,7 +67,7 @@ export const handleCreatePost = async (req: Request, res: Response, next: NextFu
         const file = (req as any).file as Express.Multer.File | undefined;
         if (file) { imageUrl = file.filename; }
 
-        await postService.createPost(title.trim(), content.trim(), authorId, category, imageUrl);
+        await newsService.createPost(title.trim(), content.trim(), authorId, category, imageUrl);
         res.redirect('/dashboard');
 
     } catch (error) {
@@ -90,7 +90,7 @@ export const showDashboard = async (req: Request, res: Response, next: NextFunct
             return res.redirect('/login'); // Session yoksa login'e yönlendir
         }
 
-        const userPosts = await postService.getPostsByAuthor(userId);
+        const userPosts = await newsService.getPostsByAuthor(userId);
 
         res.render('dashboard', {
             posts: userPosts,
@@ -111,7 +111,7 @@ export const showPostDetail = async (req: Request, res: Response, next: NextFunc
         const postId = req.params.id;
 
         const [post, comments] = await Promise.all([
-            postService.getPostById(postId),
+            newsService.getPostById(postId),
             commentService.getCommentsByPostId(postId)
         ]);
 
@@ -138,7 +138,7 @@ export const showPostDetail = async (req: Request, res: Response, next: NextFunc
 export const showEditPostForm = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const postId = req.params.id;
-        const post = await postService.getPostById(postId);
+        const post = await newsService.getPostById(postId);
 
         if (!post) {
             const error: any = new Error("Düzenlenecek yazı bulunamadı.");
@@ -148,7 +148,7 @@ export const showEditPostForm = async (req: Request, res: Response, next: NextFu
 
         res.render('posts/edit', {
             post: post, // Formu doldurmak için post bilgisi
-            categories: Object.values(PostCategory), // Kategori dropdown'ı için
+            categories: Object.values(NewsCategory), // Kategori dropdown'ı için
             error: null, // Hata mesajı için başlangıç değeri
             activePage: 'editPost' // Sidebar için (opsiyonel)
         });
@@ -170,12 +170,12 @@ export const handleUpdatePost = async (req: Request, res: Response, next: NextFu
     // 2. Eğer validasyon hatası varsa...
     if (!errors.isEmpty()) {
         // Hata durumunda formu tekrar doldurmak için postu ve eski girilenleri gönder
-        const post = await postService.getPostById(postId); // Mevcut postu çek
+        const post = await newsService.getPostById(postId); // Mevcut postu çek
         return res.status(400).render('posts/edit', {
             errors: errors.array(), // Hataları gönder
             post: post, // Post bilgisini yine de gönder (ID vb. için)
             oldInput: { title, content, category }, // Hatalı girilen veriyi gönder
-            categories: Object.values(PostCategory),
+            categories: Object.values(NewsCategory),
             error: null,
             activePage: 'editPost'
         });
@@ -197,11 +197,11 @@ export const handleUpdatePost = async (req: Request, res: Response, next: NextFu
         };
 
         if (imageUrl === undefined) {
-             const existingPost = await postService.getPostById(postId);
+             const existingPost = await newsService.getPostById(postId);
              updateData.imageUrl = existingPost?.imageUrl;
         }
 
-        const updatedPost = await postService.updatePost(postId, updateData);
+        const updatedPost = await newsService.updatePost(postId, updateData);
         if (!updatedPost) { /* ... (post bulunamadı hatası) ... */ }
 
         res.redirect(`/posts/${postId}`);
@@ -209,7 +209,7 @@ export const handleUpdatePost = async (req: Request, res: Response, next: NextFu
     } catch (error) {
         // Multer veya Servis hatası
          if (error instanceof Error && error.message.startsWith('Hata: Sadece resim dosyaları')) {
-             const post = await postService.getPostById(postId);
+             const post = await newsService.getPostById(postId);
              return res.status(400).render('posts/edit', { /* ... (multer hatası render) ... */ });
          }
          next(error); // Diğer hataları genel yöneticiye gönder
@@ -223,7 +223,7 @@ export const handleUpdatePost = async (req: Request, res: Response, next: NextFu
 export const handleDeletePost = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const postId = req.params.id;
-        await postService.deletePost(postId);
+        await newsService.deletePost(postId);
         // Başarılı silme sonrası dashboard'a yönlendir
         res.redirect('/dashboard');
     } catch (error) {
