@@ -1,6 +1,6 @@
 import express from 'express'
-import {login, register} from '../services/userService'
-import { IUser } from '../models/userModel'
+import {login, register} from '../../services/api/userService'
+import { IUser } from '../../models/userModel'
 const userRestController = express.Router()
 
 /**

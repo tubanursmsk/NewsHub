@@ -1,4 +1,5 @@
-import UserDB, { IUser, UserRole } from '../../models/userModel';
+import UserDB, { IUser } from '../../models/userModel';
+import { eRoles } from '../../utils/eRoles';
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
 
@@ -143,13 +144,13 @@ export const deleteUser = async (userId: string): Promise<void> => {
             throw new Error("Geçersiz kullanıcı ID'si.");
         }
 
-        // Opsiyonel: Kullanıcıyı silmeden önce, admin rolünde olup olmadığını kontrol et
-        // ve son adminin silinmesini engelle (proje gereksinimlerine bağlı)
+        // Opsiyonel: Kullanıcıyı silmeden önce, Admin rolünde olup olmadığını kontrol et
+        // ve son Adminin silinmesini engelle (proje gereksinimlerine bağlı)
         // const userToDelete = await UserDB.findById(userId);
-        // if (userToDelete && userToDelete.role === UserRole.ADMIN) {
-        //     const adminCount = await UserDB.countDocuments({ role: UserRole.ADMIN });
-        //     if (adminCount <= 1) {
-        //         throw new Error("Son admin kullanıcı silinemez.");
+        // if (userToDelete && userToDelete.role === eRoles.Admin) {
+        //     const AdminCount = await UserDB.countDocuments({ role: eRoles.Admin });
+        //     if (AdminCount <= 1) {
+        //         throw new Error("Son Admin kullanıcı silinemez.");
         //     }
         // }
 

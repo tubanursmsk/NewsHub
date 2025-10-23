@@ -1,7 +1,7 @@
 import express from 'express';
-import { checkRole, verifyToken, AuthRequest } from '../configs/auth';
-import { eRoles } from '../utils/eRoles';
-import { createComment, updateComment, approveComment, getComments, getUserComments, getPendingComments, searchComments} from '../services/commentService';
+import { checkRole, verifyToken, AuthRequest } from '../../middlewares/jwtAuth';
+import { eRoles } from '../../utils/eRoles';
+import { createComment, updateComment, approveComment, getComments, getUserComments, getPendingComments, searchComments} from '../../services/api/commentService';
 import { JwtPayload } from 'jsonwebtoken';
 
 const commentRestController = express.Router();

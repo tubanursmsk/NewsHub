@@ -1,23 +1,23 @@
 import express from 'express'
-import { AuthRequest, checkRole, verifyToken } from '../configs/auth';
-import { eRoles } from '../utils/eRoles';
-import { addNews, newsListAll, removeNews, searchNews, updateNews } from '../services/newsService';
+import { AuthRequest, checkRole, verifyToken } from '../../middlewares/jwtAuth';
+import { eRoles } from '../../utils/eRoles';
+import { addpost, postListAll, removepost, searchpost, updatepost } from '../../services/api/postService';
 import { JwtPayload } from 'jsonwebtoken';
 
-const newsRestController = express.Router()
+const postRestController = express.Router()
 
 /**
  * @swagger
  * tags:
- *   name: News
- *   description: News management
+ *   name: post
+ *   description: post management
  */
 
 /**
  * @swagger
  * components:
  *   schemas:
- *     News:
+ *     post:
  *       type: object
  *       required:
  *         - title
@@ -25,17 +25,17 @@ const newsRestController = express.Router()
  *       properties:
  *         _id:
  *           type: string
- *           description: The auto-generated id of the news
+ *           description: The auto-generated id of the post
  *           example: "665f1c2b9e6e4a001f8e4b1b"
  *         title:
  *           type: string
- *           description: News title
+ *           description: post title
  *           minLength: 2
  *           maxLength: 100
  *           example: "New Product Launch"
  *         content:
  *           type: string
- *           description: News content
+ *           description: post content
  *           example: "We are excited to announce our new product..."
  *         author:
  *           type: string
@@ -53,10 +53,10 @@ const newsRestController = express.Router()
 
 /**
  * @swagger
- * /news/add:
+ * /post/add:
  *   post:
- *     summary: Add news
- *     tags: [News]
+ *     summary: Add post
+ *     tags: [post]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -74,11 +74,11 @@ const newsRestController = express.Router()
  *                 example: "We are excited to announce our new product..."
  *     responses:
  *       201:
- *         description: News created successfully
+ *         description: post created successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/News'
+ *               $ref: '#/components/schemas/post'
  *       401:
  *         description: Unauthorized
  *       403:
@@ -92,10 +92,10 @@ const newsRestController = express.Router()
 
 /**
  * @swagger
- * /news/update/{id}:
+ * /post/update/{id}:
  *   put:
- *     summary: Update news
- *     tags: [News]
+ *     summary: Update post
+ *     tags: [post]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -104,7 +104,7 @@ const newsRestController = express.Router()
  *         required: true
  *         schema:
  *           type: string
- *         description: News ID
+ *         description: post ID
  *     requestBody:
  *       required: true
  *       content:
@@ -114,23 +114,23 @@ const newsRestController = express.Router()
  *             properties:
  *               title:
  *                 type: string
- *                 example: "Updated News Title"
+ *                 example: "Updated post Title"
  *               content:
  *                 type: string
  *                 example: "Updated content..."
  *     responses:
  *       200:
- *         description: News updated successfully
+ *         description: post updated successfully
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/News'
+ *               $ref: '#/components/schemas/post'
  *       401:
  *         description: Unauthorized
  *       403:
  *         description: Forbidden (Admin role required)
  *       404:
- *         description: News not found
+ *         description: post not found
  *       500:
  *         description: Internal server error
  *     x-roles:
@@ -139,10 +139,10 @@ const newsRestController = express.Router()
 
 /**
  * @swagger
- * /news/delete/{id}:
+ * /post/delete/{id}:
  *   delete:
- *     summary: Delete news
- *     tags: [News]
+ *     summary: Delete post
+ *     tags: [post]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -151,16 +151,16 @@ const newsRestController = express.Router()
  *         required: true
  *         schema:
  *           type: string
- *         description: News ID
+ *         description: post ID
  *     responses:
  *       200:
- *         description: News deleted successfully
+ *         description: post deleted successfully
  *       401:
  *         description: Unauthorized
  *       403:
  *         description: Forbidden (Admin role required)
  *       404:
- *         description: News not found
+ *         description: post not found
  *       500:
  *         description: Internal server error
  *     x-roles:
@@ -169,10 +169,10 @@ const newsRestController = express.Router()
 
 /**
  * @swagger
- * /news/list:
+ * /post/list:
  *   get:
- *     summary: List news (paginated, 10 per page)
- *     tags: [News]
+ *     summary: List post (paginated, 10 per page)
+ *     tags: [post]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -190,16 +190,16 @@ const newsRestController = express.Router()
  *         description: Items per page
  *     responses:
  *       200:
- *         description: List of news
+ *         description: List of post
  *         content:
  *           application/json:
  *             schema:
  *               type: object
  *               properties:
- *                 news:
+ *                 post:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/News'
+ *                     $ref: '#/components/schemas/post'
  *                 page:
  *                   type: integer
  *                   example: 1
@@ -215,10 +215,10 @@ const newsRestController = express.Router()
 
 /**
  * @swagger
- * /news/search:
+ * /post/search:
  *   get:
- *     summary: Search news by query string
- *     tags: [News]
+ *     summary: Search post by query string
+ *     tags: [post]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -241,10 +241,10 @@ const newsRestController = express.Router()
  *             schema:
  *               type: object
  *               properties:
- *                 news:
+ *                 post:
  *                   type: array
  *                   items:
- *                     $ref: '#/components/schemas/News'
+ *                     $ref: '#/components/schemas/post'
  *                 page:
  *                   type: integer
  *                   example: 1
@@ -259,11 +259,11 @@ const newsRestController = express.Router()
  *       - User
  */
 
-newsRestController.post("/add", verifyToken, checkRole(eRoles.Admin, eRoles.Customer), async (req: AuthRequest, res) => {
+postRestController.post("/add", verifyToken, checkRole(eRoles.Admin, eRoles.Customer), async (req: AuthRequest, res) => {
   try {
     const data = req.body;
     const user = req.user as JwtPayload;
-    const result = await addNews(data, user.id);
+    const result = await addpost(data, user.id);
     return res.status(result.code).json(result);
   } catch (error) {
     return res.status(500).json({ message: "Internal server error", error });
@@ -271,21 +271,21 @@ newsRestController.post("/add", verifyToken, checkRole(eRoles.Admin, eRoles.Cust
 });
 
 
-newsRestController.put("/update/:id", verifyToken, checkRole(eRoles.Admin), async (req, res) => {
+postRestController.put("/update/:id", verifyToken, checkRole(eRoles.Admin), async (req, res) => {
   try {
     const { id } = req.params;
     const data = req.body;
-    const result = await updateNews(id, data)
+    const result = await updatepost(id, data)
     return res.status(result.code).json(result)
   } catch (error) {
     return res.status(500).json({ message: "Internal server error", error })
   }
 })
 
-newsRestController.delete("/delete/:id", verifyToken, checkRole(eRoles.Admin), async (req, res) => {
+postRestController.delete("/delete/:id", verifyToken, checkRole(eRoles.Admin), async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await removeNews(id);
+    const result = await removepost(id);
     return res.status(result.code).json(result);
   } catch (error) {
     return res.status(500).json({ message: "Internal server error", error });
@@ -293,22 +293,22 @@ newsRestController.delete("/delete/:id", verifyToken, checkRole(eRoles.Admin), a
 });
 
 // Haber Listeleme
-newsRestController.get("/list", verifyToken, checkRole(eRoles.Admin), async (req, res) => {
+postRestController.get("/list", verifyToken, checkRole(eRoles.Admin), async (req, res) => {
     try {
         const page = parseInt(req.query.page as string) || 1;
         const limit = parseInt(req.query.limit as string) || 10;
-        const result = await newsListAll(page, limit);
+        const result = await postListAll(page, limit);
         return res.status(result.code).json(result);
     } catch (error) {
         return res.status(500).json({ message: "Internal server error", error });
     }
 });
 
-newsRestController.get("/search", verifyToken, checkRole(eRoles.Admin, eRoles.User), async (req, res) => {
+postRestController.get("/search", verifyToken, checkRole(eRoles.Admin, eRoles.User), async (req, res) => {
   try {
     const q = (req.query.q as string) || "";
     const page = parseInt(req.query.page as string) || 1;
-    const result = await searchNews(q, page, 10);
+    const result = await searchpost(q, page, 10);
     return res.status(result.code).json(result);
   } catch (error) {
     return res.status(500).json({ message: "Internal server error", error });
@@ -316,4 +316,4 @@ newsRestController.get("/search", verifyToken, checkRole(eRoles.Admin, eRoles.Us
 });
 
 
-export default newsRestController
+export default postRestController

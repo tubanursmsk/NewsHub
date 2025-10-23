@@ -1,39 +1,46 @@
 import mongoose, { Document, Schema } from "mongoose";
+import { eRoles } from "../utils/eRoles"; // eRoles dosyasını doğru yoldan import ettiğinizden emin olun
 
-// Rolleri tanımlamak için bir enum kullanmak en iyi pratiktir.
-export enum UserRole {
-    ADMIN = 'Admin',
-    USER = 'User'
-}
-
+// Interface'i güncelleyelim: 'role' yerine 'roles' (dizi) ve createdAt/updatedAt
 export interface IUser extends Document {
     name: string;
     email: string;
-    password: string; // Bu alanı hash'lenmiş parolayı saklayacak şekilde kullanacağız
-    role: UserRole; // 'role' alanı eklendi
-    jwt?: string,
-    createdAt?: Date; // Alan adını 'createdAt' olarak değiştirmek daha standart
+    password: string; // Hash'lenmiş parola
+    roles: eRoles[]; // Rolleri dizi olarak tutacağız
+    jwt?: string;     // API için opsiyonel JWT alanı
+    createdAt?: Date; // timestamps: true ile otomatik gelecek
+    updatedAt?: Date; // timestamps: true ile otomatik gelecek
 }
 
 const UserSchema: Schema<IUser> = new Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: { // 'role' şemaya eklendi
+    name: {
         type: String,
-        enum: Object.values(UserRole), // Sadece 'Admin' veya 'User' olabilir
-        default: UserRole.USER // Varsayılan rol 'User' olarak ayarlandı
+        required: true
     },
-    jwt: {type: String},
-    createdAt: { // Alan adı 'createdAt' ve varsayılan değer 'Date.now' olarak güncellendi
-        type: Date,
-        default:  () => {
-            const now = new Date();
-            return now.setHours(now.getHours() + 3)
-        } // MongoDB'nin kendi zaman damgasını kullanmak daha iyi
+    email: {
+        type: String,
+        required: true,
+        unique: true
+        // min: 6 kaldırıldı, email validasyonu validator ile yapılmalı
+    },
+    password: {
+        type: String,
+        required: true
+    },
+    roles: { // 'role' yerine 'roles' dizisi kullanıyoruz
+        type: [String], // Mongoose'da dizi tanımı
+        enum: [eRoles.Admin, eRoles.User], // Sadece eRoles'daki değerler geçerli
+        default: [eRoles.User] // Varsayılan rolü dizi içinde User olarak ayarla
+    },
+    jwt: { // API tarafı için gerekebilir
+        type: String,
+        required: false // Zorunlu değil
     }
-})
+},
+{
+    timestamps: true // createdAt ve updatedAt alanlarını otomatik ekler ve yönetir
+});
 
-const UserDB = mongoose.model<IUser>('User', UserSchema)
+const UserDB = mongoose.model<IUser>('User', UserSchema);
 
-export default UserDB
+export default UserDB;

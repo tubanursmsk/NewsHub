@@ -76,7 +76,7 @@ export const deleteComment = async (commentId: string): Promise<void> => {
         if (!comment) {
             throw new Error("Silinecek yorum bulunamadı.");
         }
-        const postId = comment.post; // Post ID'sini al
+        const postId = comment.postId; // Post ID'sini al
 
         // 2. Yorumu 'comments' koleksiyonundan sil.
         const deleteResult = await CommentDB.findByIdAndDelete(commentId);

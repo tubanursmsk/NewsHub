@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import * as authService from '../../services/web/authService'; 
 import { validationResult } from 'express-validator';
+import { eRoles } from '../../utils/eRoles';
 
 /**
  * Giriş sayfasını gösterir. Hata veya eski girdi için boş değerler gönderir.
@@ -94,14 +95,17 @@ export const handleLogin = async (req: Request, res: Response, next: NextFunctio
 
     // 3. Validasyon hatası yoksa, giriş yapmayı dene
     try {
-        const user = await authService.loginUser(email, password);
-        
-        // Session bilgilerini ayarla
-        req.session.userId = user._id.toString(); 
-        req.session.userRole = user.role;
+    const user = await authService.loginUser(email, password);
+    // ---> LOG 1: Kullanıcı verisini kontrol et <---
+    console.log('Login - Fetched User:', JSON.stringify(user, null, 2));
 
-        // Dashboard'a yönlendir
-        res.redirect('/dashboard');
+    req.session.userId = user._id.toString();
+    req.session.userRoles = user.roles; // Bu satırın user.roles'i doğru aldığından emin olalım
+
+    // ---> LOG 2: Session'ı kontrol et <---
+    console.log('Login - Session Set:', JSON.stringify(req.session, null, 2));
+
+    res.redirect('/dashboard');
 
     } catch (error: any) {
         // Servisten gelen hataları yakala (örn: "Email veya parola hatalı")

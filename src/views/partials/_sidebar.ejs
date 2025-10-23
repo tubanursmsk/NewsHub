@@ -23,7 +23,7 @@
         <span class="align-middle">İstatistikler</span>
     </a>
 
-    <hr class="my-2"> <% if (user && user.role === 'Admin') { %>
+    <hr class="my-2"> <% if (user && user.roles && user.roles.includes(eRoles.Admin)) { %>
         <a href="/admin/dashboard" class="list-group-item list-group-item-action py-2 text-danger <%= typeof activePage !== 'undefined' && activePage === 'admin' ? 'active' : '' %>">
             <i class="bi bi-shield-lock fs-5 me-2 align-middle"></i> 
             <span class="align-middle">Admin Paneli</span>

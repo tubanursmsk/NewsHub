@@ -1,15 +1,36 @@
-import express, { Request, Response, NextFunction } from 'express'; // Request, Response, NextFunction import edildi
+import express, { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
 import path from 'path';
 import { connectDB } from './utils/db';
-import { UserRole } from './models/userModel';
+import { eRoles } from './utils/eRoles';
 import dotenv from 'dotenv';
 import ejsLayouts from 'express-ejs-layouts';
+import swaggerUi from 'swagger-ui-express';
+import swaggerJSDoc from 'swagger-jsdoc';
+import { swaggerOptions } from './utils/swaggerOptions';
 
-// --- Rota Dosyalarını Import Et ---
-import authRoutes from './routes/web/authRoutes';
-import postRoutes from './routes/web/postRoutes'; // Henüz oluşturulmadıysa yorumda kalsın
-import adminRoutes from './routes/web/adminRoutes';
+// --- Rota Importları ---
+
+import authWebRoutes from './routes/web/authRoutes';
+import postWebRoutes from './routes/web/postRoutes';
+import adminWebRoutes from './routes/web/adminRoutes';
+
+import userApiRoutes from './routes/api/user.routes';
+import categoryApiRoutes from './routes/api/category.routes';
+import postApiRoutes from './routes/api/post.routes';
+import commentApiRoutes from './routes/api/comment.routes';
+
+
+// ============ YENİDEN EKLENECEK BLOK ============
+// Session tiplerini doğrudan bu dosyada tanımla
+declare module 'express-session' {
+    interface SessionData {
+        userId?: string;
+        userRoles?: eRoles[]; // Tekil 'userRole' yerine 'userRoles' dizisi
+    }
+}
+// ===============================================
+
 
 // .env Config
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -17,16 +38,15 @@ dotenv.config({ path: path.resolve(__dirname, '../.env') });
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Session Tipi Tanımı
-declare module 'express-session' {
-    interface SessionData {
-        userId?: string;
-        userRole?: UserRole;
-    }
-}
+// === Middleware'ler ===
+
+// Body Parsers
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Session Middleware
 app.use(session({
+    // ... (session ayarlarınız) ...
     secret: process.env.SESSION_SECRET || 'varsayilan_cok_gizli_anahtar',
     resave: false,
     saveUninitialized: false,
@@ -37,12 +57,22 @@ app.use(session({
     }
 }));
 
+
 // Global Kullanıcı Bilgisi Middleware'i
 app.use((req: Request, res: Response, next: NextFunction) => {
-    if (req.session.userId && req.session.userRole) {
+    // API istekleri için bu middleware'i atla (API JWT kullanır)
+    if (req.originalUrl.startsWith('/api/v1')) {
+       return next();
+    }
+
+    // eRoles enum'ını tüm view'larda kullanılabilir yap
+    res.locals.eRoles = eRoles;
+
+    if (req.session.userId && req.session.userRoles) {
+        // 'role' yerine 'roles' kullanalım daha net olur
         res.locals.user = {
             id: req.session.userId,
-            role: req.session.userRole
+            roles: req.session.userRoles // Dizi olarak ata
         };
     } else {
         res.locals.user = null;
@@ -50,53 +80,69 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     next();
 });
 
+// Statik Dosyalar 
+app.use(express.static(path.join(__dirname, '../public')));
+
 // Veritabanı Bağlantısı
 connectDB();
 
 // EJS Ayarları
 app.use(ejsLayouts);
-app.set('layout', './layouts/main'); // Ana layout dosyanızın adı (views klasörü içinde)
+app.set('layout', './layouts/main');
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-// Body Parser Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
-// --- Rota Kullanımı ---
-app.use('/', authRoutes);
-app.use('/', postRoutes); 
-app.use('/admin', adminRoutes);
+// === Swagger Kurulumu ===
+const swaggerDocs = swaggerJSDoc(swaggerOptions);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 
-// Statik Dosyalar (Public klasörünü dışarıya açar)
-app.use(express.static(path.join(__dirname, '../public'))); // ../ ile kök dizine çıkıp public'i bul
+// === Rota Yönlendirme ===
+app.use('/api/v1', userApiRoutes);
+app.use('/api/v1', categoryApiRoutes);
+app.use('/api/v1', postApiRoutes);
+app.use('/api/v1', commentApiRoutes);
 
-// ======== HATA YÖNETİMİ GÜNCELLENDİ ========
+app.use('/', authWebRoutes);
+app.use('/', postWebRoutes);
+app.use('/admin', adminWebRoutes);
 
-// 404 Hata Yönetimi (Diğer rotalardan sonra gelmeli)
+
+// === Hata Yönetimi ===
+// 404 Handler
 app.use((req: Request, res: Response, next: NextFunction) => {
-    res.status(404).render('error', { // Tek 'error.ejs' dosyasını kullan
+    if (req.originalUrl.startsWith('/api/v1')) {
+         return res.status(404).json({ status: 'error', message: 'Endpoint not found.' });
+    }
+    res.status(404).render('error', {
         statusCode: 404,
         message: "Aradığınız sayfa bulunamadı.",
-        layout: false // 'error.ejs' kendi HTML yapısını içerecek
+        layout: false
     });
 });
 
-// Global error handler ile tüm hatalar tek noktadan yönetiliyor
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
-    console.error(err.stack); // Geliştirme sırasında hatayı konsolda görmek önemlidir
-    res.status(500).render('error', { // Tek 'error.ejs' dosyasını kullan
-        statusCode: 500,
-        // Production ortamında kullanıcıya detaylı hata mesajı göstermemek daha güvenlidir.
-        message: process.env.NODE_ENV === 'production' ? "Sunucuda beklenmedik bir hata oluştu." : err.message,
-        layout: false // 'error.ejs' kendi HTML yapısını içerecek
+// Genel Hata Handler
+app.use((err: any, req: Request, res: Response, next: NextFunction) => { 
+    console.error("Beklenmedik Hata:", err); 
+
+    if (req.originalUrl.startsWith('/api/v1')) {
+        return res.status(err.status || 500).json({
+            status: 'error',
+            message: process.env.NODE_ENV === 'production' ? 'Sunucuda bir hata oluştu.' : err.message || 'Bilinmeyen sunucu hatası.'
+        });
+    }
+
+    res.status(err.status || 500).render('error', {
+        statusCode: err.status || 500,
+        message: process.env.NODE_ENV === 'production' ? "Sunucuda beklenmedik bir hata oluştu." : err.message || 'Bilinmeyen sunucu hatası.',
+        layout: false
     });
 });
 
 
-
-
+// === Sunucuyu Başlat ===
 app.listen(PORT, () => {
     console.log(`Sunucu çalışıyor: http://localhost:${PORT}`);
+    console.log(`Swagger Docs: http://localhost:${PORT}/api-docs`);
 });

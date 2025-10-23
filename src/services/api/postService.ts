@@ -1,44 +1,44 @@
-import { IResult, jsonResult } from "../models/result";
-import News, { INews } from "../models/newsModel";
+import { IResult, jsonResult } from "../../models/result";
+import Post, { IPost } from "../../models/postModel";
 import mongoose from "mongoose";
-import Category from "../models/category";
+import Category from "../../models/categoryModel";
 
-export const addNews = async (data: INews, userid: any) => {
+export const addpost = async (data: IPost, userid: any) => {
   try {
     if (!data.title || !data.content || !data.category) {
       return jsonResult(400, false, "Title, content and category are required", null);
     }
     data.author = userid
-    const news = new News(data);
-    await news.save();
-    return jsonResult(201, true, "News added successfully", {
-      id: news._id,
-      title: news.title
+    const post = new Post(data);
+    await post.save();
+    return jsonResult(201, true, "Post added successfully", {
+      id: post._id,
+      title: post.title
     });
   } catch (error: any) {
-    console.error("Add News Error:", error);
+    console.error("Add Post Error:", error);
     return jsonResult(500, false, "Internal server error", error.message);
   }
 }
 
 // Haber düzenleme (Admin)
-export const updateNews = async (newsId: string, newsData: any): Promise<IResult> => {
+export const updatepost = async (PostId: string, PostData: any): Promise<IResult> => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(newsId)) {
+    if (!mongoose.Types.ObjectId.isValid(PostId)) {
       return jsonResult(400, false, "Invalid id", null);
     }
 
     const updates: any = {};
 
     // Title güncellenmek isteniyorsa
-    if (newsData?.title !== undefined) updates.title = newsData.title;
+    if (PostData?.title !== undefined) updates.title = PostData.title;
 
     // Content güncellenmek isteniyorsa
-    if (newsData?.content !== undefined) updates.content = newsData.content;
+    if (PostData?.content !== undefined) updates.content = PostData.content;
 
     // Kategori güncellenmek isteniyorsa:
-    if (newsData?.categoryId !== undefined) {
-      const categoryId = newsData.categoryId;
+    if (PostData?.categoryId !== undefined) {
+      const categoryId = PostData.categoryId;
       if (!mongoose.Types.ObjectId.isValid(categoryId)) {
         return jsonResult(400, false, "Invalid categoryId", null);
       }
@@ -52,53 +52,53 @@ export const updateNews = async (newsId: string, newsData: any): Promise<IResult
     }
 
     // Mongoose timestamps sayesinde updatedAt otomatik güncellenir
-    const updatedNews = await News.findByIdAndUpdate(
-      newsId,
+    const updatedPost = await Post.findByIdAndUpdate(
+      PostId,
       { $set: updates },
       { new: true, runValidators: true }
     ).populate("category", "name description isactive");
 
-    if (!updatedNews) {
-      return jsonResult(404, false, "News not found", null);
+    if (!updatedPost) {
+      return jsonResult(404, false, "Post not found", null);
     }
 
-    return jsonResult(200, true, "News updated successfully", updatedNews);
+    return jsonResult(200, true, "Post updated successfully", updatedPost);
   } catch (error: any) {
-    console.error("Edit News Error:", error);
+    console.error("Edit Post Error:", error);
     return jsonResult(500, false, "Internal server error", error.message);
   }
 };
 
 // Haber silme (Admin)
-export const removeNews = async (newsId: string) => {
+export const removepost = async (PostId: string) => {
   try {
-    if (!mongoose.Types.ObjectId.isValid(newsId)) {
+    if (!mongoose.Types.ObjectId.isValid(PostId)) {
       return jsonResult(400, false, "Invalid id", null);
     }
 
-    const deleted = await News.findByIdAndDelete(newsId);
+    const deleted = await Post.findByIdAndDelete(PostId);
     if (!deleted) {
-      return jsonResult(404, false, "News not found", null);
+      return jsonResult(404, false, "Post not found", null);
     }
 
-    return jsonResult(200, true, "News deleted successfully", {
+    return jsonResult(200, true, "Post deleted successfully", {
       id: deleted._id,
       title: deleted.title
     });
   } catch (error: any) {
-    console.error("Remove News Error:", error);
+    console.error("Remove Post Error:", error);
     return jsonResult(500, false, "Internal server error", error.message);
   }
 };
 
 // Haberleri listeleme
-export const newsListAll = async (page: number = 1, limit: number = 10) => {
+export const postListAll = async (page: number = 1, limit: number = 10) => {
   try {
     const skip = (page - 1) * limit;
-    const items = await News.find().skip(skip).limit(limit).sort({ createdAt: -1 });
-    const total = await News.countDocuments();
+    const items = await Post.find().skip(skip).limit(limit).sort({ createdAt: -1 });
+    const total = await Post.countDocuments();
 
-    return jsonResult(200, true, "All news fetched successfully", {
+    return jsonResult(200, true, "All Post fetched successfully", {
       items,
       page,
       limit,
@@ -106,13 +106,13 @@ export const newsListAll = async (page: number = 1, limit: number = 10) => {
       totalPages: Math.ceil(total / limit)
     });
   } catch (error: any) {
-    console.error("List All News Error:", error);
+    console.error("List All Post Error:", error);
     return jsonResult(500, false, "Internal server error", error.message);
   }
 }
 
 // Haber arama (sayfalama) (Admin, User)
-export const searchNews = async (q: string, page: number = 1, limit: number = 10) => {
+export const searchpost = async (q: string, page: number = 1, limit: number = 10) => {
   try {
     if (!q || q.trim().length === 0) {
       return jsonResult(400, false, "Query parameter 'q' is required", null);
@@ -126,8 +126,8 @@ export const searchNews = async (q: string, page: number = 1, limit: number = 10
     const filter = { $or: [{ title: regex }, { content: regex }, { category: regex }] };
 
     const [items, total] = await Promise.all([
-      News.find(filter).skip(skip).limit(safeLimit).sort({ createdAt: -1 }),
-      News.countDocuments(filter)
+      Post.find(filter).skip(skip).limit(safeLimit).sort({ createdAt: -1 }),
+      Post.countDocuments(filter)
     ]);
 
     return jsonResult(200, true, "Search results fetched", {
@@ -139,7 +139,7 @@ export const searchNews = async (q: string, page: number = 1, limit: number = 10
       query: q
     });
   } catch (error: any) {
-    console.error("Search News Error:", error);
+    console.error("Search Post Error:", error);
     return jsonResult(500, false, "Internal server error", error.message);
   }
 };

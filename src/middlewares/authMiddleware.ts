@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import PostDB from '../models/postModel'; // isAuthor ve canDeleteComment için gerekli
-import { UserRole } from '../models/userModel'; // isAdmin ve canDeleteComment için gerekli
+import { eRoles } from '../utils/eRoles'; // isAdmin ve canDeleteComment için gerekli
 import mongoose from 'mongoose'; // isAuthor ve canDeleteComment içinde ObjectId kontrolü için (opsiyonel ama iyi)
 
 /**
@@ -23,12 +23,12 @@ export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
     
     // === HATA AYIKLAMA: Session'daki rolü ve beklenen rolü yazdır ===
     console.log("isAdmin Middleware Çalıştı.");
-    console.log("Session Rolü (req.session.userRole):", req.session.userRole); 
-    console.log("Beklenen Rol (UserRole.ADMIN):", UserRole.ADMIN);
-    console.log("Eşleşme Durumu:", req.session.userRole === UserRole.ADMIN);
+    console.log("Session Rolü (req.session.eRoles):", req.session.userRoles); 
+    console.log("Beklenen Rol (eRoles.Admin):", eRoles.Admin);
+    console.log("Admin Rolü Var Mı?:", req.session.userRoles?.includes(eRoles.Admin)); // ?.includes güvenli erişim sağlar
     // =============================================================
 
-    if (req.session.userRole === UserRole.ADMIN) {
+    if (req.session.userRoles && req.session.userRoles.includes(eRoles.Admin)) {
         console.log("Yetki verildi (Admin).");
         next(); 
     } else {
@@ -41,33 +41,6 @@ export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-/**
- * 2. isAdmin: Kullanıcı Admin mi?
- * Sadece 'Admin' rolündeki kullanıcıların erişebileceği rotaları korur.
- * 'isAuthenticated' middleware'inden SONRA kullanılmalıdır.
- */
-/*
-export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
-    // Session'daki userRole'ü kontrol et (Global middleware sayesinde var olmalı)
-    if (req.session.userRole === UserRole.ADMIN) {
-        next(); // Rol Admin, devam et
-    } else {
-        // Rol Admin değilse, yetkisiz erişim hatası ver
-        res.status(403).render('error', {
-            statusCode: 403,
-            message: "Bu sayfaya erişim yetkiniz bulunmamaktadır.",
-            layout: false
-        });
-    }
-};
-*/
-
-/**
- * 3. isAuthor: Kullanıcı Post'un Sahibi mi?
- * Bir postu düzenleme veya silme gibi işlemlerde, işlemi yapanın postun yazarı olup olmadığını kontrol eder.
- * '/posts/:id/edit', '/posts/:id/delete' gibi rotalarda kullanılır.
- * 'isAuthenticated' middleware'inden SONRA kullanılmalıdır.
- */
 export const isAuthor = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const postId = req.params.id;
@@ -104,15 +77,16 @@ export const isAuthor = async (req: Request, res: Response, next: NextFunction) 
 export const canDeleteComment = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { postId } = req.params;
-        const { userId, userRole } = req.session;
+        const { userId, userRoles } = req.session;
 
-        if (!userId || !userRole || !mongoose.Types.ObjectId.isValid(postId)) {
-            // Session veya geçerli postId yoksa hata ver
-             return res.status(400).render('error', { statusCode: 400, message: "Geçersiz istek veya kimlik doğrulama hatası.", layout: false });
+        // Kontrolde de 'userRoles' kullan
+        if (!userId || !userRoles || !mongoose.Types.ObjectId.isValid(postId)) {
+            return res.status(400).render('error', { statusCode: 400, message: "Geçersiz istek veya kimlik doğrulama hatası.", layout: false });
         }
 
         // Kural 1: Admin ise direkt devam et
-        if (userRole === UserRole.ADMIN) {
+        //  'userRoles' kullan ve Array.includes ile kontrol et
+        if (userRoles.includes(eRoles.Admin)) {
             return next();
         }
 

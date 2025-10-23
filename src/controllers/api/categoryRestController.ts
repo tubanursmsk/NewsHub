@@ -1,9 +1,9 @@
 import express from 'express'
-import { AuthRequest, checkRole, verifyToken } from '../configs/auth';
-import { eRoles } from '../utils/eRoles';
-import Category, { ICategory } from '../models/category'; // Model'i import et
+import { AuthRequest, checkRole, verifyToken } from '../../middlewares/jwtAuth';
+import { eRoles } from '../../utils/eRoles';
+import Category, { ICategory } from '../../models/categoryModel'; // Model'i import et
 import { JwtPayload } from 'jsonwebtoken';
-import { editCategory, removeCategory } from '../services/categoryService';
+import { editCategory, removeCategory } from '../../services/api/categoryService';
 
 const categoryRestController = express.Router()
 

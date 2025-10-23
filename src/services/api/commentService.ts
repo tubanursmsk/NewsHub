@@ -1,34 +1,33 @@
-import { jsonResult } from "../models/result";
-import CommentDB, { IComment } from "../models/commentModel";
-import UserDB from "../models/userModel";
+import { jsonResult } from "../../models/result";
+import CommentDB, { IComment } from "../../models/commentModel";
+import UserDB from "../../models/userModel";
 import mongoose from "mongoose";
 
-export const createComment = async (commentData: Partial<IComment>, userId: string, userName: string) => {
+export const createComment = async (commentData: Partial<IComment>, postId: string, userName: string) => {
     try {
-        if (!commentData.newsId) {
-            return jsonResult(400, false, "newsId gerekli", null);
+        if (!commentData.postId) {
+            return jsonResult(400, false, "postId gerekli", null);
         }
-        if (!mongoose.isValidObjectId(String(commentData.newsId))) {
-            return jsonResult(400, false, "newsId geçersiz", null);
+        if (!mongoose.isValidObjectId(String(commentData.postId))) {
+            return jsonResult(400, false, "postId geçersiz", null);
         }
 
-        const user = await UserDB.findById(userId);
+        const user = await UserDB.findById(postId);
         if (!user) {
             return jsonResult(404, false, "Kullanıcı bulunamadı", null);
         }
 
         const comment = new CommentDB({
             content: commentData.content,
-            userId: new mongoose.Types.ObjectId(userId),
-            newsId: new mongoose.Types.ObjectId(String(commentData.newsId)),
-            lastUpdatedById: new mongoose.Types.ObjectId(userId),
+            postId: new mongoose.Types.ObjectId(String(commentData.postId)),
+            lastUpdatedBy: new mongoose.Types.ObjectId(postId),
             isActive: false,
             like: 0,
             dislike: 0
         });
 
         await comment.save();
-        await comment.populate("userId", "name email");
+        await comment.populate("postId", "name email");
 
         return jsonResult(201, true, "Yorum başarıyla oluşturuldu", comment);
     } catch (error) {
@@ -36,7 +35,7 @@ export const createComment = async (commentData: Partial<IComment>, userId: stri
     }
 };
 
-export const updateComment = async (commentId: string, updateData: Partial<IComment>, userId: string, userRoles: string[]) => {
+export const updateComment = async (commentId: string, updateData: Partial<IComment>, postId: string, userRoles: string[]) => {
     try {
         const comment = await CommentDB.findById(commentId);
         
@@ -45,7 +44,7 @@ export const updateComment = async (commentId: string, updateData: Partial<IComm
         }
 
         // Yetki kontrolü
-        const isOwner = comment.userId.toString() === userId;
+        const isOwner = comment.postId.toString() === postId;
         const isCustomer = userRoles.includes('Customer');
         const isUser = userRoles.includes('User');
 
@@ -58,13 +57,13 @@ export const updateComment = async (commentId: string, updateData: Partial<IComm
         }
 
         // Güncelleme
+        // Güncelleme
         if (updateData.content !== undefined) comment.content = updateData.content;
-        comment.lastUpdatedById = new mongoose.Types.ObjectId(userId);
+        comment.lastUpdatedBy = new mongoose.Types.ObjectId(postId);
         comment.updatedAt = new Date();
 
         await comment.save();
-        await comment.populate('userId', 'name email');
-        
+        await comment.populate('postId', 'name email');
         return jsonResult(200, true, 'Yorum başarıyla güncellendi', comment);
     } catch (error) {
         return jsonResult(500, false, 'Yorum güncellenirken hata oluştu', error.message);
@@ -83,7 +82,7 @@ export const approveComment = async (commentId: string, isApproved: boolean) => 
         comment.updatedAt = new Date();
 
         await comment.save();
-        await comment.populate('userId', 'name email');
+        await comment.populate('postId', 'name email');
         
         const message = isApproved ? 'Yorum onaylandı' : 'Yorum reddedildi';
         return jsonResult(200, true, message, comment);
@@ -103,7 +102,7 @@ export const getComments = async (page: number = 1, limit: number = 10, filters:
         };
 
         const comments = await CommentDB.find(query)
-            .populate('userId', 'name email')
+            .populate('postId', 'name email')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
@@ -125,17 +124,17 @@ export const getComments = async (page: number = 1, limit: number = 10, filters:
     }
 };
 
-export const getUserComments = async (userId: string, page: number = 1, limit: number = 10) => {
+export const getUserComments = async (postId: string, page: number = 1, limit: number = 10) => {
     try {
         const skip = (page - 1) * limit;
         
-        const comments = await CommentDB.find({ userId: new mongoose.Types.ObjectId(userId) })
-            .populate('userId', 'name email')
+        const comments = await CommentDB.find({ postId: new mongoose.Types.ObjectId(postId) })
+            .populate('postId', 'name email')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
 
-        const total = await CommentDB.countDocuments({ userId: new mongoose.Types.ObjectId(userId) });
+        const total = await CommentDB.countDocuments({ postId: new mongoose.Types.ObjectId(postId) });
         
         return jsonResult(200, true, 'Kullanıcı yorumları başarıyla getirildi', {
             comments,
@@ -157,7 +156,7 @@ export const getPendingComments = async (page: number = 1, limit: number = 10) =
         const skip = (page - 1) * limit;
         
         const comments = await CommentDB.find({ isActive: false })
-            .populate('userId', 'name email')
+            .populate('postId', 'name email')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
@@ -189,7 +188,7 @@ export const searchComments = async (searchTerm: string, page: number = 1, limit
         };
 
         const comments = await CommentDB.find(query)
-            .populate('userId', 'name email')
+            .populate('postId', 'name email')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
