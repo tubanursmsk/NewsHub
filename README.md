@@ -1,7 +1,5 @@
 # 📰 NewsHub - Haber & Blog Platformu
 
-![NewsHub Banner](https://via.placeholder.com/1000x250/007bff/ffffff?text=NewsHub+-+Haber+%26+Blog+Platformu)
-
 > **NewsHub**, Node.js ve TypeScript kullanılarak geliştirilmiş; hem **MVC (EJS tabanlı web arayüzü)** hem de **JWT korumalı REST API** sunan, modern, güvenli ve ölçeklenebilir bir **haber & blog platformudur**.  
 > Katmanlı mimari prensipleriyle tasarlanmış, kurumsal düzeyde bir Node.js projesidir.
 
@@ -18,14 +16,6 @@ Projede aşağıdaki teknik konular bütünsel olarak ele alınmıştır:
 - MongoDB modelleme ve Mongoose ilişkileri  
 - Veri doğrulama (express-validator)  
 - Global hata filtreleme ve merkezi hata yönetimi  
-
----
-
-## 📅 Proje Takvimi
-
-| Başlangıç | Teslim | Süre |
-|------------|---------|------|
-| 13 Ekim 2025 | 22 Ekim 2025 | 10 Gün |
 
 ---
 
@@ -82,7 +72,7 @@ src/
 - **Global Error Handler** ile merkezi hata yönetimi  
 
 ### 📘 Swagger Dokümantasyonu
-- `/api-docs` adresinden tüm endpoint’ler interaktif şekilde test edilebilir.  
+- `http://localhost:4000/api-docs` adresinden tüm endpoint’ler interaktif şekilde test edilebilir.  
 
 ---
 
@@ -106,9 +96,9 @@ src/
 | Kategori | Endpoint | Metod | Açıklama | Yetki |
 |-----------|-----------|--------|-----------|--------|
 | **AUTH** | `/api/v1/auth/register` | POST | Yeni kullanıcı kaydı | Public |
-|  | `/api/v1/auth/login` | POST | Kullanıcı girişi ve JWT üretimi | Public |
-|  | `/api/v1/auth/profile` | GET | Kullanıcı bilgisi | JWT |
-|  | `/api/v1/auth/logout` | POST | Oturumu sonlandır | JWT |
+| **AUTH** | `/api/v1/auth/login` | POST | Kullanıcı girişi ve JWT üretimi | Public |
+| **AUTH** | `/api/v1/auth/profile` | GET | Kullanıcı bilgisi | JWT |
+| **AUTH** | `/api/v1/auth/logout` | POST | Oturumu sonlandır | JWT |
 | **POSTS** | `/api/v1/posts` | CRUD | Yazı oluşturma, listeleme, düzenleme, silme | JWT |
 | **COMMENTS** | `/api/v1/comments` | CRUD | Yorum ekleme, listeleme, silme | JWT |
 | **CATEGORIES** | `/api/v1/categories` | CRUD | Kategori işlemleri | Admin |
@@ -156,7 +146,8 @@ NODE_ENV=development
 npm start
 ```
 
-Uygulama → [http://localhost:3000](http://localhost:3000)
+Sunucu çalışıyor: http://localhost:4000
+Swagger Docs: http://localhost:4000/api-docs
 
 ---
 
@@ -187,6 +178,3 @@ MIT Lisansı © 2025 — [tubanursmsk](https://github.com/tubanursmsk)
 
 ---
 
-## 💬 İletişim
-📧 **E-posta:** tubanursmsk@example.com  
-🌐 **GitHub:** [tubanursmsk](https://github.com/tubanursmsk)
