@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import * as authService from '../../services/web/authService'; 
-import * as postService from '../../services/web/postService'; 
+import * as postService from '../../services/web/newsService'; 
 
 /**
  * Admin dashboard sayfasını gösterir.

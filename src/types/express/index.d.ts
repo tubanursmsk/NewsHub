@@ -1,11 +1,10 @@
-// src/types/express/index.d.ts
-import { UserRole } from '../../models/userModel'; // userModel'den UserRole enum'unu import et
+import { eRoles } from '../../utils/eRoles'; // userModel'den UserRole enum'unu import et
 
 // express-session modülünü genişlet
 declare module 'express-session' {
   interface SessionData {
     userId?: string;     // userId'nin string ve opsiyonel olduğunu belirt
-    userRole?: UserRole; // userRole'ün UserRole enum tipinde ve opsiyonel olduğunu belirt
+    eRoles?: eRoles; // userRole'ün UserRole enum tipinde ve opsiyonel olduğunu belirt
   }
 }
 

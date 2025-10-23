@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 // Servis ve Model importları (yollarının doğru olduğundan emin ol)
-import * as postService from '../../services/web/postService';
+import * as postService from '../../services/web/newsService';
 import * as commentService from '../../services/web/commentService';
-import { PostCategory } from '../../models/postModel'; // Enum importu
+import { PostCategory } from '../../models/newsModel'; // Enum importu
 import { validationResult } from 'express-validator';
 
 /**

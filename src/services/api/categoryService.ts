@@ -1,4 +1,4 @@
-import Category, { ICategory } from "../../models/category";
+import Category, { ICategory } from "../../models/categoryModel";
 import { IResult, jsonResult } from "../../models/result";
 import mongoose from "mongoose";
 

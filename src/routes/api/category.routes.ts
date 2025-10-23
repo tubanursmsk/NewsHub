@@ -1,13 +1,9 @@
 import { Router } from 'express';
-import { add, list, update, remove } from '../../controllers/api/categoryRestController';
-import { verifyToken, checkRole } from '../../middlewares/jwtAuth'; // JWT koruması
-import { eRoles } from '../../utils/eRoles'; // Roller
+import categoryRestController from '../../controllers/api/categoryRestController';
 
 const router = Router();
 
-router.post('/categories/add', verifyToken, checkRole(eRoles.Admin), add);
-router.get('/categories/list', verifyToken, checkRole(eRoles.Admin), list);
-router.put('/categories/update/:id', verifyToken, checkRole(eRoles.Admin), update);
-router.delete('/categories/delete/:id', verifyToken, checkRole(eRoles.Admin), remove);
+// API projesindeki app.use('/api/v1/categories', ...) satırını temel alıyoruz.
+router.use('/categories', categoryRestController);
 
 export default router;

@@ -1,0 +1,38 @@
+import mongoose, { Document, Schema } from 'mongoose';
+
+// Kategorileri bir enum olarak tanımlamak daha güvenli olabilir
+export enum PostCategory {
+    TEKNOLOJI = 'Teknoloji',
+    BILIM = 'Bilim',
+    YAPAY_ZEKA = 'Yapay Zekâ',
+    KULTUR = 'Kültür',
+    GUNDEM = 'Gündem',
+    DIGER = 'Diğer' // Varsayılan veya tanımsız için
+}
+
+export interface INews extends Document {
+    title: string;
+    content: string;
+    imageUrl?: string; 
+    category:  mongoose.Types.ObjectId; 
+    author: mongoose.Types.ObjectId; 
+    comments: mongoose.Types.ObjectId[]; 
+    createdAt: Date;
+    updatedAt?: Date;
+}
+
+const NewsSchema: Schema<INews> = new Schema({
+     title: { type: String, required: true, minlength: 2, trim: true },
+    content: { type: String, required: true, minlength: 2 },
+    imageUrl: { type: String, required: false }, 
+    category: { type: Schema.Types.ObjectId, ref: "Category", required: true, default: PostCategory.DIGER  },
+    author: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    comments: [{ type: Schema.Types.ObjectId, ref: 'Comment' }],
+},
+{
+    timestamps: true // createdAt ve updatedAt otomatik yönetilir. Serviste bu değerlerle uğraşmamıza gerek yok.
+  }
+);
+
+const NewsDB = mongoose.model<INews>('Post', NewsSchema);
+export default NewsDB;

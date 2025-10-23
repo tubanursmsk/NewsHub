@@ -1,12 +1,11 @@
 import { Router } from 'express';
 // API controller'ını doğru yoldan import et
-import { register, login } from '../../controllers/api/userRestController';
+import userRestController from '../../controllers/api/userRestController'; // Doğru import
 
 const router = Router();
 
-// REST API projesindeki yollara göre ayarla (/users/register değil, /auth/register)
-router.post('/auth/register', register);
-router.post('/auth/login', login);
-// TODO: Diğer user API rotalarını buraya ekle (örn: /auth/profile)
+// API projesindeki app.use('/api/v1/users', userRestController) satırını temel alıyoruz.
+// app.ts'de /api/v1 prefix'i var, bu yüzden burada /users kullanmalıyız.
+router.use('/users', userRestController);
 
 export default router;

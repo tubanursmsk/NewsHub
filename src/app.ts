@@ -1,37 +1,51 @@
 import express, { Request, Response, NextFunction } from 'express';
 import session from 'express-session';
 import path from 'path';
-import { connectDB } from './utils/db'; // MVC projesindeki db bağlantısı
-import { UserRole } from './models/userModel';
+import { connectDB } from './utils/db';
+import { eRoles } from './utils/eRoles';
 import dotenv from 'dotenv';
 import ejsLayouts from 'express-ejs-layouts';
-import swaggerUi from 'swagger-ui-express';   // Swagger UI
-import swaggerJSDoc from 'swagger-jsdoc';     // Swagger JSDoc
-import { swaggerOptions } from './utils/swaggerOptions'; // API projesinden taşınan swagger ayarları
+import swaggerUi from 'swagger-ui-express';
+import swaggerJSDoc from 'swagger-jsdoc';
+import { swaggerOptions } from './utils/swaggerOptions';
 
-// --- Rota Dosyalarını Import Et ---
-// Web (MVC) Rotaları
+// --- Rota Importları ---
+
 import authWebRoutes from './routes/web/authRoutes';
-import postWebRoutes from './routes/web/postRoutes';
+import newsWebRoutes from './routes/web/newsRoutes';
 import adminWebRoutes from './routes/web/adminRoutes';
-
-// API Rotaları 
-import userApiRoutes from './routes/api/user.routes';      
+import userApiRoutes from './routes/api/user.routes';
 import categoryApiRoutes from './routes/api/category.routes';
-import newsApiRoutes from './routes/api/news.routes';        
-import commentApiRoutes from './routes/api/comment.routes';  
+import newsApiRoutes from './routes/api/news.routes';
+import commentApiRoutes from './routes/api/comment.routes';
 
 
-// .env Config (En başta sadece bir kez)
+// ============ YENİDEN EKLENECEK BLOK ============
+// Session tiplerini doğrudan bu dosyada tanımla
+declare module 'express-session' {
+    interface SessionData {
+        userId?: string;
+        eRoles?: eRoles;
+    }
+}
+// ===============================================
+
+
+// .env Config
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// === Middleware'ler ===
+
+// Body Parsers
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Session Middleware
-// Session tipleri (userId, userRole) artık src/types/express/index.d.ts dosyasında tanımlı
 app.use(session({
+    // ... (session ayarlarınız) ...
     secret: process.env.SESSION_SECRET || 'varsayilan_cok_gizli_anahtar',
     resave: false,
     saveUninitialized: false,
@@ -42,23 +56,22 @@ app.use(session({
     }
 }));
 
-// Global Kullanıcı Bilgisi Middleware'i (Sadece EJS için)
+// Global Kullanıcı Bilgisi Middleware'i
+// Artık req.session.userId ve req.session.userRole tanınmalı
 app.use((req: Request, res: Response, next: NextFunction) => {
-    // Bu middleware API isteklerini etkilememeli
     if (req.originalUrl.startsWith('/api/v1')) {
-        return next(); // API isteğiyse atla
+        return next(); 
     }
-    /// Web isteği ise session'dan user bilgisini locals'a ekle
-    // Session tipleri index.d.ts'de tanımlandığı için artık hata vermemeli
-    if (req.session.userId && req.session.userRole) {
-        res.locals.user = { id: req.session.userId, role: req.session.userRole };
+    if (req.session.userId && req.session.eRoles) {
+        res.locals.user = { id: req.session.userId, role: req.session.eRoles };
     } else {
         res.locals.user = null;
     }
     next();
 });
 
-// Statik Dosyalar (public/uploads içindeki resimler için)
+// ... (geri kalan kodlar: static, connectDB, EJS, Swagger, Rotalar, Hata Yönetimi, app.listen) ...
+// Statik Dosyalar 
 app.use(express.static(path.join(__dirname, '../public')));
 
 // Veritabanı Bağlantısı
@@ -77,28 +90,21 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 
 // === Rota Yönlendirme ===
-
-// API Rotaları ( '/api/v1' ön eki ile)
-app.use('/api/v1', userApiRoutes);     // Örn: /api/v1/auth/register
-app.use('/api/v1', categoryApiRoutes); // Örn: /api/v1/categories
-app.use('/api/v1', newsApiRoutes);     // Örn: /api/v1/news
-app.use('/api/v1', commentApiRoutes);  // Örn: /api/v1/comments
-
-// Web (MVC) Rotaları (Prefixsiz)
-app.use('/', authWebRoutes);    // /login, /register, /profile vb.
-app.use('/', postWebRoutes);    // /, /posts/new, /dashboard, /posts/:id vb.
-app.use('/admin', adminWebRoutes); // /admin/dashboard vb.
+app.use('/api/v1', userApiRoutes);
+app.use('/api/v1', categoryApiRoutes);
+app.use('/api/v1', newsApiRoutes);
+app.use('/api/v1', commentApiRoutes);
+app.use('/', authWebRoutes);
+app.use('/', newsWebRoutes);
+app.use('/admin', adminWebRoutes);
 
 
-// === Hata Yönetimi (En sonda olmalı) ===
-
+// === Hata Yönetimi ===
 // 404 Handler
 app.use((req: Request, res: Response, next: NextFunction) => {
-    // API isteği ise JSON dön
     if (req.originalUrl.startsWith('/api/v1')) {
          return res.status(404).json({ status: 'error', message: 'Endpoint not found.' });
     }
-    // Web isteği ise EJS render et
     res.status(404).render('error', {
         statusCode: 404,
         message: "Aradığınız sayfa bulunamadı.",
@@ -107,10 +113,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 // Genel Hata Handler
-app.use((err: any, req: Request, res: Response, next: NextFunction) => { // 'err' tipini 'any' yaptık
-    console.error("Beklenmedik Hata:", err); // Hatayı logla
+app.use((err: any, req: Request, res: Response, next: NextFunction) => { 
+    console.error("Beklenmedik Hata:", err); 
 
-    // API istekleri için JSON yanıtı dönelim
     if (req.originalUrl.startsWith('/api/v1')) {
         return res.status(err.status || 500).json({
             status: 'error',
@@ -118,7 +123,6 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => { // 'err
         });
     }
 
-    // Web istekleri için EJS sayfasını render edelim
     res.status(err.status || 500).render('error', {
         statusCode: err.status || 500,
         message: process.env.NODE_ENV === 'production' ? "Sunucuda beklenmedik bir hata oluştu." : err.message || 'Bilinmeyen sunucu hatası.',
