@@ -1,91 +1,192 @@
-# NewsHub
-# NewsHub - Haber & Blog Platformu (MVC Arayüzü)
+# 📰 NewsHub - Haber & Blog Platformu
 
-Bu proje, Node.js, TypeScript, Express ve EJS kullanarak geliştirilen NewsHub platformunun kullanıcı arayüzü (MVC) kısmıdır. Katmanlı mimari prensiplerine uygun olarak geliştirilmiştir.
+![NewsHub Banner](https://via.placeholder.com/1000x250/007bff/ffffff?text=NewsHub+-+Haber+%26+Blog+Platformu)
 
-## Özellikler (MVC Kısmı)
+> **NewsHub**, Node.js ve TypeScript kullanılarak geliştirilmiş; hem **MVC (EJS tabanlı web arayüzü)** hem de **JWT korumalı REST API** sunan, modern, güvenli ve ölçeklenebilir bir **haber & blog platformudur**.  
+> Katmanlı mimari prensipleriyle tasarlanmış, kurumsal düzeyde bir Node.js projesidir.
 
-Şu ana kadar eklenen temel özellikler şunlardır:
+---
 
-* **Kullanıcı Yönetimi:**
-    * Kullanıcı Kaydı (Register) - İsim, Email, Parola (`bcrypt` ile hashlenir)
-    * Kullanıcı Girişi (Login) - Email, Parola ile (`express-session` kullanılır)
-    * Kullanıcı Çıkışı (Logout) - Oturum sonlandırma
-    * Roller: `User` (varsayılan) ve `Admin` rolleri tanımlı. Admin'e özel menü öğeleri gizlenir.
-* **Profil Yönetimi:**
-    * Profil Bilgilerini Görüntüleme (`/profile`).
-    * Profil Bilgilerini Düzenleme (`/profile/edit`) - İsim ve Email güncelleme (Validasyonlu).
-* **Yazı (Post) Yönetimi:**
-    * Yeni Yazı Ekleme (`/posts/new`) - Başlık, İçerik, Kategori seçimi ve Resim yükleme (`multer` ile).
-    * Yazıları Listeleme:
-        * Anasayfa (`/`) - Tüm yazarların son yazılarını listeler.
-        * Kullanıcı Paneli (`/dashboard`) - Giriş yapmış kullanıcının kendi yazılarını listeler.
-        * Kategori Sayfaları (`/category/:categoryName`) - Seçilen kategoriye ait yazıları listeler.
-    * Yazı Detay Sayfası (`/posts/:id`) - Yazının tam içeriğini, resmini, yazarını, tarihini ve yorumlarını gösterir.
-* **Yorum Yönetimi:**
-    * Yorum Ekleme - Giriş yapmış kullanıcılar yazı detay sayfasında yorum yapabilir.
-* **Arayüz & Tasarım:**
-    * Bootstrap 5 kullanılarak modern ve duyarlı (responsive) tasarım.
-    * Ana Layout (`main.ejs`) ve Partials (`_head`, `_header`, `_sidebar`) yapısı.
-    * Mobil uyumlu, açılır/kapanır sidebar (Offcanvas).
-    * Medium benzeri font kullanımı (`Inter` ve `Source Serif 4`).
-* **Hata Yönetimi:**
-    * Özelleştirilmiş 404 ve 500 hata sayfaları (`error.ejs`).
-* **Veri Doğrulama:**
-    * `express-validator` kullanılarak Kayıt, Giriş ve Profil Düzenleme formlarında temel doğrulama.
+## 🎯 Proje Amacı
 
-## Kurulum ve Çalıştırma
+Bu proje, **Node.js + TypeScript** kullanarak hem **REST API** hem de **EJS tabanlı web arayüzü** üzerinde **katmanlı mimari (MVC)** yapısını uygulamayı hedefler.  
+Projede aşağıdaki teknik konular bütünsel olarak ele alınmıştır:
 
-1.  **Projeyi Klonlayın:**
-    ```bash
-    git clone <repository_url>
-    cd <proje_klasoru> 
-    ```
-2.  **Bağımlılıkları Yükleyin:**
-    ```bash
-    npm install
-    ```
-3.  **`.env` Dosyasını Oluşturun:**
-    Projenin ana dizininde `.env` adında bir dosya oluşturun ve aşağıdaki değişkenleri kendi ayarlarınıza göre doldurun:
-    ```.env
-    # MongoDB Bağlantı Adresi
-    MONGO_URI=mongodb://localhost:27017/newshub_db 
+- JWT tabanlı kimlik doğrulama  
+- Session tabanlı oturum yönetimi  
+- Swagger API dokümantasyonu  
+- MongoDB modelleme ve Mongoose ilişkileri  
+- Veri doğrulama (express-validator)  
+- Global hata filtreleme ve merkezi hata yönetimi  
 
-    # MongoDB Veritabanı Adı
-    DB_NAME=newshub_project
+---
 
-    # Express Session Gizli Anahtarı (Güvenli ve rastgele bir değer girin!)
-    SESSION_SECRET=cok_gizli_ve_uzun_bir_anahtar_olmalı
+## 📅 Proje Takvimi
 
-    # (Opsiyonel) Port Numarası (Varsayılan 3000)
-    # PORT=3000
+| Başlangıç | Teslim | Süre |
+|------------|---------|------|
+| 13 Ekim 2025 | 22 Ekim 2025 | 10 Gün |
 
-    # (Opsiyonel) Node Environment (Canlıya alırken 'production' yapın)
-    # NODE_ENV=development 
-    ```
-4.  **Uygulamayı Başlatın (Geliştirme Modu):**
-    ```bash
-    npm start 
-    ```
-    Uygulama varsayılan olarak `http://localhost:3000` adresinde çalışacaktır.
+---
 
-## Klasör Yapısı (MVC Odaklı)
+## 👥 Roller
 
-* `src/`
-    * `controllers/web/`: Gelen istekleri alır, servisleri çağırır, EJS view'larını render eder.
-    * `middlewares/`: İstek zincirinde araya giren fonksiyonlar (örn: `isAuthenticated`).
-    * `models/`: MongoDB (Mongoose) şemaları (User, Post, Comment).
-    * `routes/web/`: URL yollarını ilgili kontrolör fonksiyonlarına yönlendirir.
-    * `services/`: İş mantığı ve veritabanı işlemleri burada yapılır.
-    * `utils/`: Yardımcı fonksiyonlar (DB bağlantısı, dosya yükleme vb.).
-    * `validations/`: `express-validator` kuralları.
-    * `views/`: EJS şablon dosyaları.
-        * `auth/`: Login, register sayfaları.
-        * `error/`: Hata sayfaları.
-        * `layouts/`: Ana sayfa şablonu (`main.ejs`).
-        * `partials/`: Tekrar kullanılabilir arayüz parçaları (`_head`, `_header`, `_sidebar`).
-        * `posts/`: Yazı ile ilgili sayfalar (new, detail, edit).
-        * `profile/`: Profil sayfaları (view, edit).
-        * `dashboard.ejs`: Kullanıcı paneli.
-        * `home.ejs`: Anasayfa.
-    * `app.ts`: Ana Express uygulama dosyası (middleware'ler, rota bağlantıları).
+| Rol | Açıklama |
+|------|-----------|
+| **Admin** | Tüm kullanıcıları ve içerikleri yönetebilir. |
+| **User** | Kayıt olabilir, giriş yapabilir, yazı oluşturabilir, düzenleyebilir, silebilir, yorum yapabilir. |
+
+---
+
+## 🧱 Mimari Yapı
+
+Proje **katmanlı mimari (layered architecture)** prensibiyle inşa edilmiştir.
+
+```
+src/
+├── controllers/     → HTTP isteklerini karşılar, servisleri çağırır
+│   ├── api/         → REST API controller'ları
+│   └── web/         → EJS render eden controller'lar
+├── services/        → İş mantığı (Business logic)
+├── models/          → Mongoose modelleri (User, Post, Comment)
+├── routes/          → Web ve API rotaları
+├── views/           → EJS şablonları (login, register, dashboard, admin, vs.)
+├── middlewares/     → Auth, validation, global error handler
+├── utils/           → JWT, bcrypt, swagger config, eRoles vb.
+├── validations/     → express-validator kuralları
+└── app.ts           → Ana Express uygulaması
+```
+
+---
+
+## 💡 Fonksiyonel Özellikler
+
+### 🔐 Authentication & Authorization
+- Kullanıcı **register** ve **login** işlemleri  
+- Parola **bcrypt** ile hashlenir  
+- REST API tarafında **JWT token** ile kimlik doğrulama  
+- EJS tarafında **session tabanlı oturum** yönetimi  
+- Rol bazlı erişim (Admin vs User)
+
+### 📝 Post Yönetimi
+- Yazı oluşturma, düzenleme, silme, listeleme  
+- Yazı detay sayfası (yorum alanı ile)  
+- REST API üzerinde JWT korumalı CRUD işlemleri  
+
+### 💬 Yorum Yönetimi
+- Kullanıcılar yazılara yorum yapabilir  
+- Yorumlar yalnızca **Admin** veya **Post sahibi** tarafından silinebilir  
+
+### ⚙️ Validasyon & Hata Yönetimi
+- **express-validator** ile form ve API veri kontrolü  
+- **Global Error Handler** ile merkezi hata yönetimi  
+
+### 📘 Swagger Dokümantasyonu
+- `/api-docs` adresinden tüm endpoint’ler interaktif şekilde test edilebilir.  
+
+---
+
+## 🧰 Kullanılan Teknolojiler
+
+| Alan | Teknoloji |
+|------|------------|
+| Backend | Node.js, Express.js |
+| Dil | TypeScript |
+| Veritabanı | MongoDB + Mongoose |
+| View Engine | EJS, express-ejs-layouts |
+| Kimlik Doğrulama | bcrypt, JWT, express-session |
+| Doğrulama | express-validator |
+| Dokümantasyon | Swagger (swagger-ui-express, swagger-jsdoc) |
+| Yardımcılar | dotenv, nodemon, ts-node, multer |
+
+---
+
+## 🧩 REST API Endpointleri
+
+| Kategori | Endpoint | Metod | Açıklama | Yetki |
+|-----------|-----------|--------|-----------|--------|
+| **AUTH** | `/api/v1/auth/register` | POST | Yeni kullanıcı kaydı | Public |
+|  | `/api/v1/auth/login` | POST | Kullanıcı girişi ve JWT üretimi | Public |
+|  | `/api/v1/auth/profile` | GET | Kullanıcı bilgisi | JWT |
+|  | `/api/v1/auth/logout` | POST | Oturumu sonlandır | JWT |
+| **POSTS** | `/api/v1/posts` | CRUD | Yazı oluşturma, listeleme, düzenleme, silme | JWT |
+| **COMMENTS** | `/api/v1/comments` | CRUD | Yorum ekleme, listeleme, silme | JWT |
+| **CATEGORIES** | `/api/v1/categories` | CRUD | Kategori işlemleri | Admin |
+| **SWAGGER** | `/api-docs` | GET | API Dokümantasyonu | Public |
+
+---
+
+## 📄 EJS Sayfaları
+
+| Sayfa | Açıklama |
+|--------|-----------|
+| `/login` | Kullanıcı giriş formu |
+| `/register` | Yeni kullanıcı kayıt formu |
+| `/dashboard` | Kullanıcının kendi yazılarını listeler |
+| `/posts/new` | Yeni yazı ekleme formu |
+| `/posts/:id` | Yazı detay sayfası (yorumlarla birlikte) |
+| `/admin` | Admin paneli (tüm kullanıcı ve içerikler) |
+
+---
+
+## ⚙️ Kurulum
+
+```bash
+# 1️⃣ Repo’yu klonla
+git clone https://github.com/tubanursmsk/NewsHub.git
+cd NewsHub
+
+# 2️⃣ Bağımlılıkları yükle
+npm install
+
+# 3️⃣ Ortam değişkenleri (.env)
+```
+
+`.env` örneği 👇
+```dotenv
+MONGO_URI=mongodb://localhost:27017/NewsHubDB
+SESSION_SECRET=SUPER_SECRET_SESSION_KEY
+SECRET_KEY=SUPER_SECRET_JWT_KEY
+PORT=3000
+NODE_ENV=development
+```
+
+```bash
+# 4️⃣ Geliştirme modunda çalıştır
+npm start
+```
+
+Uygulama → [http://localhost:3000](http://localhost:3000)
+
+---
+
+## 🎓 Öğrenme Kazanımları
+
+✅ Katmanlı mimariyi tam kapsamlı uygulama  
+✅ REST API ve MVC yapılarını tek projede entegre etme  
+✅ JWT ve Session farklarını deneyimleme  
+✅ Mongoose ilişkilerini (`populate`) etkin kullanma  
+✅ Global error handler & validation zinciri kurma  
+✅ Swagger ile profesyonel API dokümantasyonu oluşturma  
+✅ Kurumsal düzeyde Node.js + TypeScript proje deneyimi kazanma  
+
+---
+
+## 📸 Görseller
+
+![Anasayfa](https://via.placeholder.com/800x400/007bff/ffffff?text=Anasayfa+-+NewsHub)
+![Dashboard](https://via.placeholder.com/800x400/343a40/ffffff?text=Kullanici+Paneli)
+![Admin Panel](https://via.placeholder.com/800x400/6c757d/ffffff?text=Admin+Paneli)
+*(Gerçek proje ekran görüntülerini buraya ekleyebilirsin.)*
+
+---
+
+## 🧾 Lisans
+
+MIT Lisansı © 2025 — [tubanursmsk](https://github.com/tubanursmsk)
+
+---
+
+## 💬 İletişim
+📧 **E-posta:** tubanursmsk@example.com  
+🌐 **GitHub:** [tubanursmsk](https://github.com/tubanursmsk)
