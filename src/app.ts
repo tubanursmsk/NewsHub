@@ -10,7 +10,6 @@ import swaggerJSDoc from 'swagger-jsdoc';
 import { swaggerOptions } from './utils/swaggerOptions';
 
 // --- Rota Importları ---
-
 import authWebRoutes from './routes/web/authRoutes';
 import postWebRoutes from './routes/web/postRoutes';
 import adminWebRoutes from './routes/web/adminRoutes';
@@ -21,16 +20,14 @@ import postApiRoutes from './routes/api/post.routes';
 import commentApiRoutes from './routes/api/comment.routes';
 
 
-// ============ YENİDEN EKLENECEK BLOK ============
+
 // Session tiplerini doğrudan bu dosyada tanımla
 declare module 'express-session' {
     interface SessionData {
         userId?: string;
-        userRoles?: eRoles[]; // Tekil 'userRole' yerine 'userRoles' dizisi
+        userRoles?: eRoles[];
     }
 }
-// ===============================================
-
 
 // .env Config
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
@@ -57,10 +54,9 @@ app.use(session({
     }
 }));
 
-
 // Global Kullanıcı Bilgisi Middleware'i
 app.use((req: Request, res: Response, next: NextFunction) => {
-    // API istekleri için bu middleware'i atla (API JWT kullanır)
+    
     if (req.originalUrl.startsWith('/api/v1')) {
        return next();
     }
@@ -69,10 +65,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     res.locals.eRoles = eRoles;
 
     if (req.session.userId && req.session.userRoles) {
-        // 'role' yerine 'roles' kullanalım daha net olur
         res.locals.user = {
             id: req.session.userId,
-            roles: req.session.userRoles // Dizi olarak ata
+            roles: req.session.userRoles 
         };
     } else {
         res.locals.user = null;
@@ -92,11 +87,9 @@ app.set('layout', './layouts/main');
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-
 // === Swagger Kurulumu ===
 const swaggerDocs = swaggerJSDoc(swaggerOptions);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-
 
 // === Rota Yönlendirme ===
 app.use('/api/v1', userApiRoutes);
@@ -107,7 +100,6 @@ app.use('/api/v1', commentApiRoutes);
 app.use('/', authWebRoutes);
 app.use('/', postWebRoutes);
 app.use('/admin', adminWebRoutes);
-
 
 // === Hata Yönetimi ===
 // 404 Handler

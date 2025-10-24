@@ -1,7 +1,7 @@
 import express from 'express'
 import { AuthRequest, checkRole, verifyToken } from '../../middlewares/jwtAuth';
 import { eRoles } from '../../utils/eRoles';
-import Category, { ICategory } from '../../models/categoryModel'; // Model'i import et
+import Category, { ICategory } from '../../models/categoryModel'; 
 import { JwtPayload } from 'jsonwebtoken';
 import { editCategory, removeCategory } from '../../services/api/categoryService';
 

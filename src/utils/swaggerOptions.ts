@@ -32,12 +32,12 @@ export const swaggerOptions = {
                         description: 'Kategori yönetimi işlemleri',
                     },
                     {
-                        name: 'News',
-                        description: 'Haber (İçerik) yönetimi işlemleri',
-                    },
-                    {
                         name: 'Comments',
                         description: 'Yorum yönetimi işlemleri',
+                    },
+                    {
+                        name: 'Post',
+                        description: 'Haber (İçerik) yönetimi işlemleri',
                     },
                 ],
             components: {
@@ -50,5 +50,5 @@ export const swaggerOptions = {
             },
         },
     },
-    apis: ['./src/restcontrollers/*.ts', './src/models/*.ts'], // Path to the API docs
+    apis: ['./src/controllers/api/*.ts', './src/models/*.ts'], // Path to the API docs
 };

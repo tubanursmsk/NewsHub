@@ -3,7 +3,7 @@ import newsRestController from '../../controllers/api/postRestController';
 
 const router = Router();
 
-// API projesindeki app.use('/api/v1/news', ...) satırını temel alıyoruz.
+// API projesindeki app.use('/api/v1/news', ...) 
 router.use('/news', newsRestController);
 
 export default router;

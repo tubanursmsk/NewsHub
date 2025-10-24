@@ -7,7 +7,7 @@ export const addCategory = async (categoryData: ICategory, userId: string): Prom
     try {
         // Kategori adı zaten var mı kontrol et
         const existingCategory = await Category.findOne({ 
-            name: { $regex: new RegExp(`^${categoryData.name}$`, 'i') } // Case-insensitive
+            name: { $regex: new RegExp(`^${categoryData.name}$`, 'i') } 
         });
 
         if (existingCategory) {

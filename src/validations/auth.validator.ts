@@ -1,6 +1,5 @@
 import { body } from 'express-validator';
-import UserDB from '../models/userModel'; // Email'in zaten var olup olmadığını kontrol etmek için
-
+import UserDB from '../models/userModel'; 
 export const registerValidationRules = () => {
   return [
     // 1. 'name' alanı için kurallar
@@ -27,13 +26,9 @@ export const registerValidationRules = () => {
     body('password')
       .notEmpty().withMessage('Parola alanı boş bırakılamaz.')
       .isLength({ min: 6 }).withMessage('Parola en az 6 karakter uzunluğunda olmalıdır.')
-      // İsteğe bağlı: Daha karmaşık parola kuralları eklenebilir
-      // .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{6,}$/)
-      // .withMessage('Parola en az bir büyük harf, bir küçük harf ve bir rakam içermelidir.')
   ];
-};
+}
 
-// Login için validasyon kurallarını da buraya ekleyebiliriz (sonraki adımda)
 export const loginValidationRules = () => {
     return [
         body('email')

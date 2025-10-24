@@ -1,5 +1,5 @@
 import { body } from 'express-validator';
-import { PostCategory } from '../models/postModel'; // Kategori enum'unu import et
+import { PostCategory } from '../models/postModel';
 
 // Hem yeni post hem de güncelleme için ortak kurallar
 const commonPostValidationRules = [

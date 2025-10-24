@@ -7,7 +7,6 @@ export const commentValidationRules = () => {
       .trim() // Başındaki/sonundaki boşlukları sil
       .notEmpty().withMessage('Yorum alanı boş bırakılamaz.')
       .isLength({ min: 3, max: 1000 }).withMessage('Yorum 3 ile 1000 karakter arasında olmalıdır.')
-      // Opsiyonel: Zararlı olabilecek karakterleri engellemek için .escape() eklenebilir
-      // .escape() 
+      .escape() // Zararlı olabilecek karakterleri engelliyor
   ];
 };

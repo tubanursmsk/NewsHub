@@ -1,7 +1,5 @@
-// src/models/postModel.ts
 import mongoose, { Document, Schema } from 'mongoose';
 
-// Kategori Enum'ı (validasyon veya controller'larda kullanılabilir, schema'da doğrudan enum kullanmayacağız)
 export enum PostCategory {
     TEKNOLOJI = 'Teknoloji',
     BILIM = 'Bilim',
@@ -11,58 +9,53 @@ export enum PostCategory {
     DIGER = 'Diğer'
 }
 
-// Interface'i güncelleyelim: Kategori tipi ObjectId olacak, createdAt/updatedAt eklenecek
 export interface IPost extends Document {
     title: string;
     content: string;
     imageUrl?: string;
-    category: mongoose.Types.ObjectId; // Referans için ObjectId kullanacağız
+    category: mongoose.Types.ObjectId;
     author: mongoose.Types.ObjectId;
     comments: mongoose.Types.ObjectId[];
-    createdAt?: Date; // timestamps: true ile otomatik gelecek
-    updatedAt?: Date; // timestamps: true ile otomatik gelecek
+    createdAt?: Date;
+    updatedAt?: Date; 
 }
 
 const PostSchema: Schema<IPost> = new Schema({
     title: {
         type: String,
         required: true,
-        // API'den gelen eklemeler (isteğe bağlı, validasyonla da yapılabilir)
-        // minlength: 2,
-        // trim: true
+        minlength: 2,
+        trim: true
     },
     content: {
         type: String,
         required: true,
-        // API'den gelen eklemeler (isteğe bağlı, validasyonla da yapılabilir)
-        // minlength: 2
+        minlength: 2
     },
     imageUrl: {
         type: String,
         required: false
     },
-    category: { // Kategori alanını referans olarak güncelledik
+    category: { 
         type: Schema.Types.ObjectId,
-        ref: 'Category', // Ayrı bir Category modeline referans verecek
+        ref: 'Category', 
         required: true
-        // default veya enum kaldırıldı, çünkü referans kullanıyoruz.
-        // Kategori varlığı kontrolü servis katmanında yapılmalı.
+        
     },
     author: {
         type: Schema.Types.ObjectId,
-        ref: 'User', // 'User' modeline referans
+        ref: 'User',
         required: true
     },
-    comments: [{ // Yorumlar dizi olarak kalıyor
+    comments: [{ 
         type: Schema.Types.ObjectId,
-        ref: 'Comment' // 'Comment' modeline referans
+        ref: 'Comment' 
     }]
-    // createdAt manuel tanımı kaldırıldı
+  
 },
 {
-    timestamps: true // createdAt ve updatedAt alanlarını otomatik ekler ve yönetir (API modelinden alındı)
-});
+    timestamps: true 
+})
 
-const PostDB = mongoose.model<IPost>('Post', PostSchema); // Model adı 'Post' olarak kalıyor
-
+const PostDB = mongoose.model<IPost>('Post', PostSchema); 
 export default PostDB;

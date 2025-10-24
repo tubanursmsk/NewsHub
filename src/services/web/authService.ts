@@ -3,12 +3,6 @@ import { eRoles } from '../../utils/eRoles';
 import bcrypt from 'bcrypt';
 import mongoose from 'mongoose';
 
-/**
- * Yeni bir kullanıcı kaydeder. Parolayı hash'ler.
- * @param userData Kullanıcı bilgileri (name, email, password)
- * @returns Oluşturulan kullanıcı nesnesi
- * @throws Hata: Email zaten kullanılıyorsa veya veritabanı hatası varsa
- */
 export const registerUser = async (userData: Pick<IUser, 'name' | 'email' | 'password'>): Promise<IUser> => {
     // 1. Email veritabanında var mı diye kontrol et
     const existingUser = await UserDB.findOne({ email: userData.email });
@@ -25,19 +19,10 @@ export const registerUser = async (userData: Pick<IUser, 'name' | 'email' | 'pas
         name: userData.name,
         email: userData.email,
         password: hashedPassword // Hash'lenmiş parolayı kaydet
-        // Rol otomatik olarak 'User' atanacak (modeldeki default sayesinde)
-    });
-
+    })
     return await newUser.save();
 };
 
-/**
- * Kullanıcı girişi yapar. Gelen parolayı hash ile karşılaştırır.
- * @param email Kullanıcının email adresi
- * @param password Kullanıcının girdiği düz metin parola
- * @returns Eşleşen kullanıcı nesnesi
- * @throws Hata: Kullanıcı bulunamazsa veya parola eşleşmezse
- */
 export const loginUser = async (email: string, password: string): Promise<IUser> => {
     // 1. Kullanıcıyı email'e göre bul
     const user = await UserDB.findOne({ email });
@@ -52,16 +37,9 @@ export const loginUser = async (email: string, password: string): Promise<IUser>
     }
 
     // Kullanıcı bulundu ve parola doğru
-
     return user;
 };
 
-/**
- * YENİ FONKSİYON
- * ID'ye göre tek bir kullanıcıyı getirir. Güvenlik için parola alanını dışarıda bırakır.
- * @param userId Getirilecek kullanıcının ID'si
- * @returns Kullanıcı nesnesi (parola hariç) veya bulunamazsa null
- */
 export const getUserById = async (userId: string): Promise<Omit<IUser, 'password'> | null> => {
     try {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -76,14 +54,6 @@ export const getUserById = async (userId: string): Promise<Omit<IUser, 'password
     }
 };
 
-/**
- * YENİ FONKSİYON
- * Kullanıcı bilgilerini (isim ve email) günceller.
- * @param userId Güncellenecek kullanıcının ID'si
- * @param data Yeni isim ve email bilgisi
- * @returns Güncellenmiş kullanıcı nesnesi (parola hariç)
- * @throws Hata: Email zaten kullanılıyorsa veya veritabanı hatası varsa
- */
 export const updateUserProfile = async (
     userId: string,
     data: { name: string; email: string }
@@ -92,15 +62,11 @@ export const updateUserProfile = async (
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return null;
         }
-
-        // Opsiyonel: Eğer email değiştiriliyorsa, yeni email'in başka bir kullanıcı tarafından
-        // kullanılıp kullanılmadığını kontrol etmemiz gerekir.
         const existingUserWithEmail = await UserDB.findOne({ email: data.email, _id: { $ne: userId } });
         if (existingUserWithEmail) {
             throw new Error('Bu email adresi başka bir kullanıcı tarafından kullanılıyor.');
         }
 
-        // Kullanıcıyı bul ve güncelle, güncellenmiş halini döndür (parola hariç)
         const updatedUser = await UserDB.findByIdAndUpdate(
             userId,
             { name: data.name, email: data.email },
@@ -110,19 +76,12 @@ export const updateUserProfile = async (
         return updatedUser;
     } catch (error: any) {
         console.error("Profil güncellenirken hata:", error);
-        // Hata mesajını doğrudan fırlat ki controller yakalasın
         throw new Error(error.message || "Profil güncellenirken bir sorun oluştu.");
     }
 };
 
-/**
- * YENİ FONKSİYON
- * Veritabanındaki tüm kullanıcıları getirir (parolalar hariç).
- * @returns Kullanıcıların dizisi (parola hariç)
- */
 export const getAllUsers = async (): Promise<Omit<IUser, 'password'>[]> => {
     try {
-        // Tüm kullanıcıları bul ve select('-password') ile parola alanını hariç tut
         const users = await UserDB.find().select('-password').sort({ createdAt: -1 }); // En yeni kayıtlar üste gelsin
         return users;
     } catch (error) {
@@ -131,52 +90,20 @@ export const getAllUsers = async (): Promise<Omit<IUser, 'password'>[]> => {
     }
 };
 
-/**
- * YENİ FONKSİYON
- * Bir kullanıcıyı ve isteğe bağlı olarak ilişkili içeriklerini siler.
- * DİKKAT: İlişkili postları ve yorumları silmek geri alınamaz!
- * @param userId Silinecek kullanıcının ID'si
- * @throws Hata: Kullanıcı bulunamazsa veya veritabanı hatası varsa
- */
 export const deleteUser = async (userId: string): Promise<void> => {
     try {
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             throw new Error("Geçersiz kullanıcı ID'si.");
         }
-
-        // Opsiyonel: Kullanıcıyı silmeden önce, Admin rolünde olup olmadığını kontrol et
-        // ve son Adminin silinmesini engelle (proje gereksinimlerine bağlı)
-        // const userToDelete = await UserDB.findById(userId);
-        // if (userToDelete && userToDelete.role === eRoles.Admin) {
-        //     const AdminCount = await UserDB.countDocuments({ role: eRoles.Admin });
-        //     if (AdminCount <= 1) {
-        //         throw new Error("Son Admin kullanıcı silinemez.");
-        //     }
-        // }
-
         // 1. Kullanıcıyı sil
         const deleteResult = await UserDB.findByIdAndDelete(userId);
         if (!deleteResult) {
             throw new Error("Silinecek kullanıcı bulunamadı.");
         }
-
-        // 2. (Opsiyonel ama Önerilir) Kullanıcının yazdığı postları da sil
-        // DİKKAT: Bu işlem kullanıcının tüm yazılarını kalıcı olarak siler!
-        // Eğer postların kalması isteniyorsa (yazar: "Silinmiş Kullanıcı" gibi), bu kısmı kaldırın.
-        // await PostDB.deleteMany({ author: userId });
-
-        // 3. (Opsiyonel ama Önerilir) Kullanıcının yaptığı yorumları da sil
-        // DİKKAT: Bu işlem kullanıcının tüm yorumlarını kalıcı olarak siler!
-        // Yorumların kalması isteniyorsa bu kısmı kaldırın.
-        // await CommentDB.deleteMany({ author: userId });
-
-        // TODO: Silinen yorumların Post'lardaki referanslarını da temizlemek gerekebilir ($pull ile)
-
         console.log(`Kullanıcı (${userId}) silindi.`); // Loglama
 
     } catch (error) {
         console.error("Kullanıcı silinirken hata:", error);
-        // Controller'a hatayı yeniden fırlat
         throw new Error(error instanceof Error ? error.message : "Kullanıcı silinirken bir sorun oluştu.");
     }
 };

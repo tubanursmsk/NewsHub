@@ -27,11 +27,11 @@ export function verifyToken(req: AuthRequest, res: Response, next: NextFunction)
   });
 }
 
-export function checkRole(...roles: eRoles[]) { //birden fazla parametreyi tek bir roles dizisinde topladık.
+export function checkRole(...roles: eRoles[]) { //birden fazla parametreyi tek bir roles dizisinde topland
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     const user = req.user as JwtPayload;
     const userRoles = user.roles;
-    // Kullanıcının rolleri roles dizisinde var mı kontrolü
+    // Kullanıcının rolleri roles dizisinde var mı?
     const hasRole = userRoles
       .map(r => r.toLowerCase())
       .some(r => roles.map(rr => rr.toLowerCase()).includes(r));

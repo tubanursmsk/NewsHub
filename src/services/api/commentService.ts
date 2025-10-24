@@ -55,9 +55,7 @@ export const updateComment = async (commentId: string, updateData: Partial<IComm
         } else if (!isUser && !isCustomer) {
             return jsonResult(403, false, 'Bu işlem için yetkiniz yok', null);
         }
-
-        // Güncelleme
-        // Güncelleme
+            // Güncellenecek alanları ayarla
         if (updateData.content !== undefined) comment.content = updateData.content;
         comment.lastUpdatedBy = new mongoose.Types.ObjectId(postId);
         comment.updatedAt = new Date();

@@ -5,44 +5,32 @@ import { isAuthenticated } from '../../middlewares/authMiddleware';
 
 const router = Router();
 
-// --- GET Rotaları (Sayfaları Göstermek İçin) ---
+// --- GET Rotaları ---
 // Ziyaretçiler bu sayfalara erişebilir, isAuthenticated middleware'i YOK
 router.get('/login', showLoginPage);
 router.get('/register', showRegisterPage);
 
-// --- POST Rotaları ---
-
-// Kayıt İşlemi (Validasyon eklendi)
+// --- POST Rotaları --- Kayıt İşlemi (Validasyon eklendi)
 router.post(
     '/register',
     registerValidationRules(), // <-- Validasyon middleware'i buraya eklendi
     handleRegister
 );
 
-// Giriş İşlemi (Validasyon eklendi - sonraki adımda kullanılacak)
+// Giriş İşlemi (Validasyon eklendi)
 router.post(
     '/login',
     loginValidationRules(), // <-- Login kurallarını da ekleyelim
     handleLogin
 );
-
-// --- Çıkış İşlemi (Giriş Yapmış Olmayı Gerektirir) ---
-// Çıkış yapabilmek için önce giriş yapmış olmak mantıklı,
-// bu yüzden buraya isAuthenticated ekleyebiliriz (opsiyonel ama önerilir).
-// import { isAuthenticated } from '../../middlewares/authMiddleware'; // Eğer middleware varsa
-// router.get('/logout', isAuthenticated, handleLogout); 
-router.get('/logout', handleLogout); // Şimdilik korumasız bırakalım
-
+router.get('/logout', handleLogout); 
 
 // ======================================
 // PROFİL SAYFALARI (GİRİŞ GEREKLİ)
 // ======================================
-
 // Profil Görüntüleme Sayfası
 router.get('/profile', isAuthenticated, showProfilePage);
-
 // Profil Düzenleme Formu Gösterme
 router.get('/profile/edit', isAuthenticated, showEditProfileForm, updateProfileValidationRules(),);
-
 
 export default router;

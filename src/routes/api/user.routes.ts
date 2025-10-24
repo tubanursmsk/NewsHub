@@ -3,9 +3,6 @@ import { Router } from 'express';
 import userRestController from '../../controllers/api/userRestController'; // Doğru import
 
 const router = Router();
-
 // API projesindeki app.use('/api/v1/users', userRestController) satırını temel alıyoruz.
-// app.ts'de /api/v1 prefix'i var, bu yüzden burada /users kullanmalıyız.
 router.use('/users', userRestController);
-
 export default router;

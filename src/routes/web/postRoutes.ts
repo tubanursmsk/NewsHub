@@ -28,17 +28,13 @@ router.get('/', showHomePage);
 // ======================================
 // GİRİŞ YAPMIŞ KULLANICI ROTALARI
 // ======================================
-
 // DASHBOARD (KULLANICI PANELİ) ROTASI
-// Sadece giriş yapmış kullanıcılar erişebilir
 router.get('/dashboard', isAuthenticated, showDashboard);
 
-// YENİ YAZI OLUŞTURMA FORMU (GÖSTERME)
-// Sadece giriş yapmış kullanıcılar erişebilir
+// YENİ YAZI OLUŞTURMA FORMU
 router.get('/posts/new', isAuthenticated, showNewPostForm);
 
-// YENİ YAZI OLUŞTURMA (İŞLEME)
-// Sadece giriş yapmış kullanıcılar erişebilir
+// YENİ YAZI OLUŞTURMA
 router.post(
     '/posts',
     isAuthenticated,
@@ -48,7 +44,6 @@ router.post(
 );
 
 // YAZI DETAY SAYFASI ROTASI
-// ':id' parametresi, URL'deki post ID'sini yakalar (req.params.id)
 router.get('/posts/:id', showPostDetail);
 
 // Yazı Düzenleme Formunu GÖSTERME
@@ -57,7 +52,7 @@ router.get('/posts/:id/edit', isAuthenticated, isAuthor, showEditPostForm);
 
 // Yazı Düzenleme Formunu İŞLEME
 // Sadece giriş yapmış ve yazının sahibi olan kullanıcı erişebilir
-// Resim yükleme olabileceği için multer middleware'ini de ekliyoruz
+// Resim yükleme olabileceği için multer middleware'ini de ekledim
 router.post(
     '/posts/:id/update', 
     isAuthenticated, 
@@ -90,6 +85,5 @@ router.post(
     canDeleteComment,      // 2. Yorumu silebilir mi (Admin veya Post Sahibi)?
     handleDeleteComment    // 3. Silme işlemini yap
 );
-
 
 export default router;

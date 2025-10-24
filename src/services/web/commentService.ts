@@ -1,21 +1,13 @@
-import CommentDB, { IComment } from '../../models/commentModel'; // commentModel'i import et
+import CommentDB, { IComment } from '../../models/commentModel';
 import PostDB from '../../models/postModel';
 import mongoose from 'mongoose';
 
-/**
- * Belirli bir posta ait tüm yorumları, yazar bilgileriyle birlikte getirir.
- * En yeniden en eskiye doğru sıralar.
- * @param postId Yorumların getirileceği post'un ID'si
- * @returns Yorumların dizisi
- * @throws Hata: Veritabanı hatası varsa
- */
 export const getCommentsByPostId = async (postId: string): Promise<IComment[]> => {
     try {
-        // Post ID'sine göre yorumları bul, 'author' alanını User modelinden 'name' ile doldur,
-        // ve createdAt alanına göre tersten sırala.
+       
         const comments = await CommentDB.find({ post: postId })
-            .populate('author', 'name') // Yorum yazarının sadece adını getir
-            .sort({ createdAt: -1 }); // En yeni yorum en üstte
+            .populate('author', 'name')
+            .sort({ createdAt: -1 }); // 
         return comments;
     } catch (error) {
         console.error("Posta ait yorumlar getirilirken hata:", error);
@@ -23,15 +15,7 @@ export const getCommentsByPostId = async (postId: string): Promise<IComment[]> =
     }
 };
 
-/**
- * YENİ FONKSİYON
- * Yeni bir yorum oluşturur ve ilgili posta ekler.
- * @param text Yorumun içeriği
- * @param authorId Yorumu yapan kullanıcının ID'si (session'dan)
- * @param postId Yorumun yapıldığı post'un ID'si (URL'den)
- * @returns Oluşturulan yorum nesnesi
- * @throws Hata: Veritabanı hatası varsa
- */
+
 export const createComment = async (text: string, authorId: string, postId: string): Promise<IComment> => {
     try {
         // 1. Yeni yorum dökümanını oluştur
@@ -49,7 +33,7 @@ export const createComment = async (text: string, authorId: string, postId: stri
             $push: { comments: savedComment._id }
         });
 
-        // Kaydedilen yorumu döndür (belki controller'da lazım olur)
+        // Kaydedilen yorumu döndür
         return savedComment;
 
     } catch (error) {
@@ -58,12 +42,6 @@ export const createComment = async (text: string, authorId: string, postId: stri
     }
 };
 
-/**
- * YENİ FONKSİYON
- * Bir yorumu veritabanından siler ve ilişkili olduğu posttan kaldırır.
- * @param commentId Silinecek yorumun ID'si
- * @throws Hata: Yorum bulunamazsa veya veritabanı hatası varsa
- */
 export const deleteComment = async (commentId: string): Promise<void> => {
     try {
         // ID'nin geçerli olup olmadığını kontrol et
@@ -71,7 +49,7 @@ export const deleteComment = async (commentId: string): Promise<void> => {
             throw new Error("Geçersiz yorum ID'si.");
         }
 
-        // 1. Önce yorumu bulup hangi posta ait olduğunu öğrenelim (Post'tan referansı silmek için gerekli).
+        // 1. Önce yorumu bulup hangi posta ait olduğunu öğrenelim
         const comment = await CommentDB.findById(commentId);
         if (!comment) {
             throw new Error("Silinecek yorum bulunamadı.");
@@ -85,13 +63,12 @@ export const deleteComment = async (commentId: string): Promise<void> => {
         }
 
 
-        // 3. Yorumun referansını 'posts' koleksiyonundaki ilgili dökümanın 'comments' dizisinden kaldır.
-        // MongoDB'nin $pull operatörü, diziden belirtilen elemanı çıkarır.
+        // 3. Yorumun referansını comments dizisinden kaldın
         await PostDB.findByIdAndUpdate(postId, {
             $pull: { comments: commentId }
         });
         
-        console.log(`Yorum (${commentId}) ve Post (${postId}) referansı silindi.`); // Loglama
+        console.log(`Yorum (${commentId}) ve Post (${postId}) referansı silindi.`); //log
 
     } catch (error) {
         console.error("Yorum silinirken hata:", error);

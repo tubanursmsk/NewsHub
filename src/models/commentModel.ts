@@ -1,60 +1,55 @@
-// src/models/commentModel.ts
 import mongoose, { Document, Schema } from 'mongoose';
 
-// Interface'i güncelleyelim: text -> content, API'den gelen ek alanlar
 export interface IComment extends Document {
-    content: string; // 'text' yerine 'content'
-    author: mongoose.Types.ObjectId; // Yorumu yapan kullanıcı (web'deki gibi)
-    postId: mongoose.Types.ObjectId; // Yorumun yapıldığı post ('post' yerine 'postId')
-    isActive: boolean; // API'den eklendi: Yorum onay durumu
-    like: number;      // API'den eklendi
-    dislike: number;   // API'den eklendi
-    lastUpdatedBy?: mongoose.Types.ObjectId; // API'den eklendi: Yorumu son güncelleyen admin/kullanıcı
-    createdAt?: Date; // timestamps: true ile otomatik gelecek
-    updatedAt?: Date; // timestamps: true ile otomatik gelecek
+    content: string; 
+    author: mongoose.Types.ObjectId; 
+    postId: mongoose.Types.ObjectId; 
+    isActive: boolean; 
+    like: number;     
+    dislike: number;   
+    lastUpdatedBy?: mongoose.Types.ObjectId; 
+    createdAt?: Date; 
+    updatedAt?: Date; 
 }
 
 const CommentSchema: Schema<IComment> = new Schema({
-    content: { // 'text' yerine 'content' kullanıldı ve API'den kısıtlamalar eklendi
+    content: {
         type: String,
         required: true,
-        minlength: [3, 'Yorum en az 3 karakter olmalıdır.'],    // Validasyon mesajı eklendi
-        maxlength: [1000, 'Yorum en fazla 1000 karakter olabilir.'] // Validasyon mesajı eklendi
+        minlength: [3, 'Yorum en az 3 karakter olmalıdır.'],    
+        maxlength: [1000, 'Yorum en fazla 1000 karakter olabilir.'] 
     },
-    author: { // Web modeliyle aynı
+    author: { 
         type: Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
-    postId: { // 'post' yerine 'postId' kullanıldı ve referans düzeltildi
+    postId: { 
         type: Schema.Types.ObjectId,
-        ref: 'Post', // 'Post' modeline referans
+        ref: 'Post', 
         required: true
     },
-    isActive: { // API'den eklendi
+    isActive: { 
         type: Boolean,
-        default: false // Varsayılan olarak yorumlar onay bekler
+        default: false 
     },
-    like: { // API'den eklendi
+    like: {
         type: Number,
         default: 0
     },
-    dislike: { // API'den eklendi
+    dislike: { 
         type: Number,
         default: 0
     },
-    lastUpdatedBy: { // API'den eklendi (required: true kaldırıldı, ilk oluşturmada olmayabilir)
+    lastUpdatedBy: { 
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
     }
-    // createdAt manuel tanımı kaldırıldı
+    
 },
 {
-    timestamps: true // createdAt ve updatedAt alanlarını otomatik ekler ve yönetir
-});
-
-// API modelindeki pre-save kancası, timestamps: true varken updatedAt'i zaten yönettiği için kaldırıldı.
-// Eğer updatedAt'i manuel olarak yönetmek istersen, timestamps: true'yu kaldırıp pre-save kancasını ekleyebilirsin.
+    timestamps: true
+})
 
 const CommentDB = mongoose.model<IComment>('Comment', CommentSchema);
 export default CommentDB;

@@ -1,15 +1,14 @@
 import mongoose, { Document, Schema } from "mongoose";
-import { eRoles } from "../utils/eRoles"; // eRoles dosyasını doğru yoldan import ettiğinizden emin olun
+import { eRoles } from "../utils/eRoles"; 
 
-// Interface'i güncelleyelim: 'role' yerine 'roles' (dizi) ve createdAt/updatedAt
 export interface IUser extends Document {
     name: string;
     email: string;
-    password: string; // Hash'lenmiş parola
-    roles: eRoles[]; // Rolleri dizi olarak tutacağız
-    jwt?: string;     // API için opsiyonel JWT alanı
-    createdAt?: Date; // timestamps: true ile otomatik gelecek
-    updatedAt?: Date; // timestamps: true ile otomatik gelecek
+    password: string; 
+    roles: eRoles[]; 
+    jwt?: string;     
+    createdAt?: Date; 
+    updatedAt?: Date; 
 }
 
 const UserSchema: Schema<IUser> = new Schema({
@@ -21,26 +20,25 @@ const UserSchema: Schema<IUser> = new Schema({
         type: String,
         required: true,
         unique: true
-        // min: 6 kaldırıldı, email validasyonu validator ile yapılmalı
+       
     },
     password: {
         type: String,
         required: true
     },
-    roles: { // 'role' yerine 'roles' dizisi kullanıyoruz
-        type: [String], // Mongoose'da dizi tanımı
-        enum: [eRoles.Admin, eRoles.User], // Sadece eRoles'daki değerler geçerli
-        default: [eRoles.User] // Varsayılan rolü dizi içinde User olarak ayarla
+    roles: { 
+        type: [String], 
+        enum: [eRoles.Admin, eRoles.User], 
+        default: [eRoles.User] 
     },
-    jwt: { // API tarafı için gerekebilir
+    jwt: { 
         type: String,
-        required: false // Zorunlu değil
+        required: false 
     }
 },
 {
-    timestamps: true // createdAt ve updatedAt alanlarını otomatik ekler ve yönetir
+    timestamps: true 
 });
 
 const UserDB = mongoose.model<IUser>('User', UserSchema);
-
 export default UserDB;
