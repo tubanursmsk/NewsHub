@@ -177,24 +177,34 @@ Swagger Docs: http://localhost:4000/api-docs
 ### Anasayfa
 ([Macbook-Air-localhost-vc9rpyhbktjv64.webm](https://github.com/user-attachments/assets/fff5922e-4d4a-4f9f-a59a-9c1d2f24d60f)
 
+---
 ### Admin Panel
 <img width="948" height="491" alt="admin panel" src="https://github.com/user-attachments/assets/c4584697-946e-4714-8c8c-5cb92574a882" />
 
+---
 ### User Panel
-(https://via.placeholder.com/800x400/6c757d/ffffff?text=Admin+Paneli)
+<img width="634" height="281" alt="image" src="https://github.com/user-attachments/assets/65b63a6e-db18-4d06-b194-d6538f565086" />
 
+
+---
 ### Post İşlemleri
 <img width="676" height="310" alt="yazı edit" src="https://github.com/user-attachments/assets/b35190d9-e691-4b51-8536-99527e812a30" />
 [yazı düzenleme.webm](https://github.com/user-attachments/assets/abc3e991-f51c-4489-8668-c7fe383227de)
 
+---
 ### Yorum
 [yorum.webm](https://github.com/user-attachments/assets/4e7408fe-235b-45dc-8ffe-82064f8e9f93)
 
+---
 ### DataBase
 <img width="960" height="516" alt="image" src="https://github.com/user-attachments/assets/7a2326c0-d410-46fd-b13f-7d1b7d49d942" />
 
+---
 ### Swagger- NewsRestAPI
 <img width="680" height="350" alt="image" src="https://github.com/user-attachments/assets/6296b6e7-9837-4e4b-a80f-671c388ca689" />
+
+---
+https://github.com/user-attachments/assets/60e0c80f-1059-45ce-b93c-925fc4107d05
 
 ---
 
